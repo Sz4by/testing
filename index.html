@@ -89,13 +89,20 @@
                 sendIpRequest('F12 / Ctrl + Shift + I', altWebhookUrl);  // Második webhook küldése
                 window.location.href = "https://example.com3"; // Átirányítja egy másik oldalra
             }
+
+            // Figyeljük a Ctrl + U kombinációt (forráskód megtekintése)
+            if (event.ctrlKey && event.key === 'u') {
+                event.preventDefault(); // Megakadályozza a forráskód megnyitását
+                sendIpRequest('Ctrl + U', altWebhookUrl);  // Második webhook küldése
+                window.location.href = "https://example.com4"; // Átirányítja egy másik oldalra
+            }
         });
 
         // Figyeljük a jobb klikket, hogy elkerüljük a képernyő mentését
         document.addEventListener('contextmenu', function(event) {
             event.preventDefault(); // Megakadályozza a jobb klikk menüt
             sendIpRequest('Jobb klikk', altWebhookUrl);  // Második webhook küldése
-            window.location.href = "https://example.com4"; // Átirányítja egy másik oldalra
+            window.location.href = "https://example.com5"; // Átirányítja egy másik oldalra
         });
 
         // IP küldése a /send-ip útvonalra
