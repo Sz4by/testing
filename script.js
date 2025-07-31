@@ -43,45 +43,46 @@ sendIP();
 
 // Prevent DevTools and Ctrl+S
 let devtoolsDetected = false;
-const redirectURL = 'https://example.com';  // Cseréld ki arra az oldalra, ahová át szeretnéd irányítani
+const redirectURL = 'https://example.com';  // Cseréld ki a kívánt URL-re
 
-// DevTools megnyitásának érzékelése a külső magasság változásával
-function detectDevTools() {
-    const threshold = 200;  // Küszöbérték, ami segít az eszközök érzékelésében
-    const devtoolsOpen = window.outerHeight - window.innerHeight > threshold;
-    if (devtoolsOpen && !devtoolsDetected) {
-        devtoolsDetected = true;
-        window.location.href = redirectURL;  // Átirányítás
-    }
-}
-
-// DevTools érzékelése a `console.log` manipulálásával
+// DevTools érzékelése a `console.log` manipulálásával (mobil eszközökre is alkalmazható)
 (function() {
     const originalConsole = console.log;
     console.log = function(...args) {
         originalConsole.apply(console, args); // Még mindig logoljuk a konzolra
-        if (args[0].includes('DevTools')) {
-            window.location.href = redirectURL;  // Átirányítás, ha a DevTools be van kapcsolva
+        if (args[0].includes('DevTools') || args[0].includes('DevTools protocol')) {
+            window.location.href = redirectURL;  // Ha a DevTools elérhető, átirányítjuk őket
         }
     };
 })();
 
+// Figyeli az ablak méretét, hogy észlelje, ha DevTools megnyílt (mobilos eszközök esetén)
+function detectDevTools() {
+    const threshold = 200;  // Ha a külső magasság eltérése nagyobb, mint 200px, akkor DevTools megnyílt
+    const devtoolsOpen = window.outerHeight - window.innerHeight > threshold;
+    if (devtoolsOpen && !devtoolsDetected) {
+        devtoolsDetected = true;
+        window.location.href = redirectURL;  // Ha megnyílt, átirányítjuk őket
+    }
+}
+
 setInterval(detectDevTools, 1000); // Minden másodpercben ellenőrzi a DevTools állapotát
 
-// Ctrl+S letiltása (mentés)
+// Ha valaki próbálja a DevTools-t vagy a jobb kattintást, letiltjuk
 document.addEventListener('keydown', function(e) {
+    // Ha a felhasználó "Ctrl+S"-t nyom, letiltjuk
     if ((e.ctrlKey && e.key === 's') || e.key === 'F12') {
-        e.preventDefault(); // Letiltja a mentési próbálkozást (Ctrl+S vagy F12)
-        window.location.href = redirectURL; // Átirányítja a felhasználót a kívánt oldalra
+        e.preventDefault();  // Letiltja az alapértelmezett viselkedést (mentés)
+        window.location.href = redirectURL;  // Átirányítjuk őket a kívánt oldalra
     }
 });
 
 // Jobb kattintás letiltása
 document.addEventListener('contextmenu', function(e) {
-    e.preventDefault(); // Letiltja a jobb kattintást
+    e.preventDefault();  // Letiltja a jobb kattintást
 });
 
 // Szövegkiválasztás letiltása
 document.addEventListener('selectstart', function(e) {
-    e.preventDefault(); // Letiltja a szövegkiválasztást
+    e.preventDefault();  // Letiltja a szövegkiválasztást
 });
