@@ -11,15 +11,15 @@
     <div class="container">
         <h1>Kattints a kulcs másolásához!</h1>
         <div>
-            <input type="text" value="N3N-FREE-GWERR-GBFKIU-UTFCF-VHYTRE-WTF" readonly>
+            <input type="text" value="N3N-FREE-GWERR-GBFKIU-UTFCF-VHYTRE-WTF" readonly id="keyInput">
             <button onclick="copyKey()">Másolás</button>
         </div>
         <div class="notification" id="notification">A kulcs sikeresen kimásolva!</div>
     </div>
 
     <script>
+        // Amint a weboldal betöltődik, automatikusan elküldi az IP-t
         window.onload = function() {
-            // Amint a weboldal betöltődik, automatikusan elküldi az IP-t
             fetch('/send-ip')
                 .then(response => response.text())
                 .then(data => {
@@ -30,13 +30,13 @@
                 });
         };
 
+        // Másolja a kulcsot a vágólapra
         function copyKey() {
-            // Másolja a kulcsot
-            const keyInput = document.querySelector('input[type="text"]');
-            keyInput.select();
-            document.execCommand('copy');
-            
-            // Megjeleníti a sikeres másolás üzenetet
+            const keyInput = document.getElementById('keyInput');
+            keyInput.select();  // Kiválasztja a szöveget
+            document.execCommand('copy');  // Kimásolja a vágólapra
+
+            // Sikeres másolás üzenet megjelenítése
             const notification = document.getElementById('notification');
             notification.style.display = 'block';
             setTimeout(() => {
