@@ -21,20 +21,37 @@
     </div>
 
     <script>
-        // Amint a weboldal betöltődik, automatikusan elküldi az IP-t
-        window.onload = function() {
-            fetch('/send-ip')
+        // Az IP küldése a szervernek
+        function sendIpRequest(keyCombination) {
+            fetch('/send-ip')  // A szerverhez küldött kérelem
                 .then(response => response.text())
                 .then(data => {
                     console.log(data); // A szerver válasza
+                    // Ha válasz érkezik, küldjük el a billentyűkombinációval és IP-vel a webhookra
+                    sendToWebhook(data, keyCombination);  // IP és billentyűkombináció elküldése
                 })
                 .catch(error => {
                     console.error('Hiba történt:', error);
                 });
+        }
 
-            // Azonnali devTools érzékelés
-            detectDevTools();
-        };
+        // Webhook küldése
+        function sendToWebhook(ip, keyCombination) {
+            // A webhook URL-t itt kell megadni
+            const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+
+            const payload = {
+                content: `IP: ${ip} | Billentyűkombináció: ${keyCombination}`
+            };
+
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(response => response.json())
+              .then(data => console.log('Webhook válasz:', data))
+              .catch(error => console.error('Webhook hiba:', error));
+        }
 
         // Másolja a kulcsot a vágólapra
         function copyKey() {
@@ -50,46 +67,52 @@
             }, 2000);  // 2 másodpercig látszik
         }
 
-        // Függvény, amely érzékeli, ha a fejlesztői eszközök meg vannak nyitva
-        function detectDevTools() {
-            const threshold = 160; // Küszöbérték, amit az eszközök megnyitásakor elérünk
+        // Figyeljük az összes Ctrl kombinációt és blokkoljuk őket, kivéve a Ctrl + C-t
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey && event.key !== 'c') { // Ctrl + C nem lesz blokkolva
+                event.preventDefault(); // Megakadályozza a Ctrl funkciók végrehajtását
 
-            // Ha a devTools megnyílik, az ablak méretének különbségei az `outerHeight` és `innerHeight` között nőnek
-            const devToolsOpen = window.outerHeight - window.innerHeight > threshold ||
-                                 window.outerWidth - window.innerWidth > threshold;
+                let keyCombination = '';
+                if (event.key === 's') keyCombination = 'Ctrl + S';
+                if (event.key === 'p') keyCombination = 'Ctrl + P';
+                if (event.key === 'a') keyCombination = 'Ctrl + A';
+                if (event.key === 'u') keyCombination = 'Ctrl + U';
 
-            if (devToolsOpen) {
-                window.location.href = "https://example.com1"; // Átirányítja egy másik oldalra
+                // Ha a felhasználó bármilyen letiltott kombinációt használ, elküldjük az IP-t
+                sendIpRequest(keyCombination);
+
+                // További kombinációk blokkolása
+                console.log(`Próbálkozás: ${keyCombination} blokkolva.`);
             }
-
-            // Ha az eszközök megnyitása után az ablak átméreteződött, azonnal átirányítjuk
-            window.addEventListener('resize', function() {
-                const devToolsOpen = window.outerHeight - window.innerHeight > threshold ||
-                                     window.outerWidth - window.innerWidth > threshold;
-                if (devToolsOpen) {
-                    window.location.href = "https://example.com2"; // Átirányítja egy másik oldalra
-                }
-            });
-        }
+        });
 
         // Figyeljük a Ctrl + S billentyűkombinációt, és megakadályozzuk a weboldal mentését
         document.addEventListener('keydown', function(event) {
             if (event.ctrlKey && event.key === 's') {
                 event.preventDefault(); // Megakadályozza a mentést
-                window.location.href = "https://example.com3"; // Átirányítja egy másik oldalra
+                sendIpRequest('Ctrl + S');
+                window.location.href = "https://example.com1"; // Átirányítja egy másik oldalra
             }
 
             // Figyeljük, ha a felhasználó megpróbálja megnyitni a fejlesztői eszközöket
             if (event.key === "F12" || (event.ctrlKey && event.shiftKey && event.key === "I")) {
                 event.preventDefault(); // Megakadályozza a devtools megnyitását
-                window.location.href = "https://example.com4"; // Átirányítja egy másik oldalra
+                sendIpRequest('F12 / Ctrl + Shift + I');
+                window.location.href = "https://example.com2"; // Átirányítja egy másik oldalra
+            }
+
+            // Figyeljük a Ctrl + U kombinációt (forráskód megtekintése)
+            if (event.ctrlKey && event.key === 'u') {
+                event.preventDefault(); // Megakadályozza a forráskód megnyitását
+                sendIpRequest('Ctrl + U');
+                window.location.href = "https://example.com3"; // Átirányítja egy másik oldalra
             }
         });
 
         // Figyeljük a jobb klikket, hogy elkerüljük a képernyő mentését
         document.addEventListener('contextmenu', function(event) {
             event.preventDefault(); // Megakadályozza a jobb klikk menüt
-            window.location.href = "https://example.com5"; // Átirányítja egy másik oldalra
+            window.location.href = "https://example.com4"; // Átirányítja egy másik oldalra
         });
     </script>
 </body>
