@@ -1,6 +1,6 @@
 body {
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(to right, #6a8a08, #f7c97d);
+    background: linear-gradient(to right, #B27A02, #F7B700); /* A kép színeihez hasonló háttér */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -19,6 +19,11 @@ body {
 
 h1 {
     font-size: 36px;
+    margin-bottom: 20px;
+}
+
+.icon {
+    width: 150px;  /* Állítsd be a kívánt méretet */
     margin-bottom: 20px;
 }
 
