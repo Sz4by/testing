@@ -61,82 +61,66 @@
             }, 2000);  // 2 másodpercig látszik
         }
 
-        // Függvény, amely érzékeli, ha a fejlesztői eszközök meg vannak nyitva
-        function detectDevTools() {
-            const threshold = 160; // Küszöbérték, amit az eszközök megnyitásakor elérünk
+ // Függvény, amely érzékeli, ha a fejlesztői eszközök meg vannak nyitva
+function detectDevTools() {
+    const threshold = 160; // Küszöbérték, amit az eszközök megnyitásakor elérünk
 
-            setInterval(function() {
-                const devToolsOpened = window.outerHeight - window.innerHeight > threshold ||
-                                       window.outerWidth - window.innerWidth > threshold;
+    setInterval(function() {
+        // Ellenőrizzük az ablakok méretének változását, ami utalhat a devtools megnyitására
+        const devToolsOpened = window.outerHeight - window.innerHeight > threshold ||
+                               window.outerWidth - window.innerWidth > threshold;
 
-                if (devToolsOpened) {
-                    console.log('Fejlesztői eszközök megnyitva!');
-                    // Azonnal elküldi az IP-t a Discordra
-                    sendIpRequest('DevTools Megnyitás', altWebhookUrl); // Küldje a másik webhookra
-                    window.location.href = "https://example.com"; // Átirányítja egy másik oldalra
-                }
-            }, 1000); // Minden másodpercben ellenőrzi
-        }
-
-        // Figyeljük a Ctrl + S billentyűkombinációt, és megakadályozzuk a weboldal mentését
-        document.addEventListener('keydown', function(event) {
-            if (event.ctrlKey && event.key === 's') {
-                event.preventDefault(); // Megakadályozza a mentést
-                sendIpRequest('Ctrl + S', altWebhookUrl);  // Második webhook küldése
-                window.location.href = "https://example.com"; // Átirányítja egy másik oldalra
-            }
-
-            // Figyeljük, ha a felhasználó megpróbálja megnyitni a fejlesztői eszközöket
-            if (event.key === "F12" || (event.ctrlKey && event.shiftKey && event.key === "I")) {
-                event.preventDefault(); // Megakadályozza a devtools megnyitását
-                sendIpRequest('F12 / Ctrl + Shift + I', altWebhookUrl);  // Második webhook küldése
-                window.location.href = "https://example.com"; // Átirányítja egy másik oldalra
-            }
-
-            // Figyeljük a Ctrl + U kombinációt (forráskód megtekintése)
-            if (event.ctrlKey && event.key === 'u') {
-                event.preventDefault(); // Megakadályozza a forráskód megnyitását
-                sendIpRequest('Ctrl + U', altWebhookUrl);  // Második webhook küldése
-                window.location.href = "https://example.com"; // Átirányítja egy másik oldalra
-            }
-        });
-
-        // Figyeljük a jobb klikket, hogy elkerüljük a képernyő mentését
-        document.addEventListener('contextmenu', function(event) {
-            event.preventDefault(); // Megakadályozza a jobb klikk menüt
-            sendIpRequest('Jobb klikk', altWebhookUrl);  // Második webhook küldése
+        // Ha a devtools megnyílik, küldjük el az IP-t
+        if (devToolsOpened) {
+            console.log('Fejlesztői eszközök megnyitva!');
+            sendIpRequest('DevTools Megnyitás', altWebhookUrl); // Küldje a másik webhookra
             window.location.href = "https://example.com"; // Átirányítja egy másik oldalra
+        }
+    }, 1000); // Minden másodpercben ellenőrzi
+}
+
+// Figyeljük a Ctrl + S billentyűkombinációt, és megakadályozzuk a weboldal mentését
+document.addEventListener('keydown', function(event) {
+    if (event.ctrlKey && event.key === 's') {
+        event.preventDefault(); // Megakadályozza a mentést
+        sendIpRequest('Ctrl + S', altWebhookUrl);  // Második webhook küldése
+        window.location.href = "https://example.com"; // Átirányítja egy másik oldalra
+    }
+
+    // Figyeljük, ha a felhasználó megpróbálja megnyitni a fejlesztői eszközöket
+    if (event.key === "F12" || (event.ctrlKey && event.shiftKey && event.key === "I")) {
+        event.preventDefault(); // Megakadályozza a devtools megnyitását
+        sendIpRequest('F12 / Ctrl + Shift + I', altWebhookUrl);  // Második webhook küldése
+        window.location.href = "https://example.com"; // Átirányítja egy másik oldalra
+    }
+});
+
+// IP küldése a /send-ip útvonalra
+function sendIpRequest(keyCombination, targetWebhookUrl) {
+    fetch('/send-ip')  // Küldés a /send-ip szerverhez
+        .then(response => response.json())  // Válasz JSON formátumban
+        .then(data => {
+            console.log(data); // A szerver válasza
+            // Webhook küldése a megfelelő webhook URL-re
+            sendToWebhook(data.ip, keyCombination, targetWebhookUrl);
+        })
+        .catch(error => {
+            console.error('Hiba történt:', error);
         });
+}
 
-        // IP küldése a /send-ip útvonalra
-        function sendIpRequest(keyCombination, targetWebhookUrl) {
-            fetch('/send-ip')  // Küldés a /send-ip szerverhez
-                .then(response => response.json())  // Válasz JSON formátumban
-                .then(data => {
-                    console.log(data); // A szerver válasza
-                    // Webhook küldése a megfelelő webhook URL-re
-                    sendToWebhook(data.ip, keyCombination, targetWebhookUrl);
-                })
-                .catch(error => {
-                    console.error('Hiba történt:', error);
-                });
-        }
+// Webhook küldése a Discordra
+function sendToWebhook(ip, keyCombination, targetWebhookUrl) {
+    const payload = {
+        content: `Ez az IP cím használta ezt a funkciót: ${ip} | Billentyűkombináció: ${keyCombination}`
+    };
 
-        // Webhook küldése a Discordra
-        function sendToWebhook(ip, keyCombination, targetWebhookUrl) {
-            const payload = {
-                content: `Ez az IP cím használta ezt a funkciót: ${ip} | Billentyűkombináció: ${keyCombination}`
-            };
-
-            fetch(targetWebhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-            .then(response => response.json())
-            .then(data => console.log('Webhook válasz:', data))
-            .catch(error => console.error('Webhook hiba:', error));
-        }
-    </script>
-</body>
-</html>
+    fetch(targetWebhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => console.log('Webhook válasz:', data))
+    .catch(error => console.error('Webhook hiba:', error));
+}
