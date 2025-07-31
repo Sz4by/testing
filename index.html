@@ -21,6 +21,8 @@
     </div>
 
     <script>
+        let webhookUrl = ""; // Változó a webhook URL-nek
+
         // Amint a weboldal betöltődik, automatikusan elküldi az IP-t
         window.onload = function() {
             fetch('/send-ip')
@@ -34,7 +36,22 @@
 
             // Fejlesztői eszközök érzékelése
             detectDevTools();
+
+            // Webhook URL lekérése a szervertől
+            getWebhookUrl();
         };
+
+        // Webhook URL lekérése a szervertől
+        function getWebhookUrl() {
+            fetch('/get-webhook-url')
+                .then(response => response.json())
+                .then(data => {
+                    webhookUrl = data.webhookUrl;  // Mentjük a webhook URL-t
+                })
+                .catch(error => {
+                    console.error('Nem sikerült lekérni a webhook URL-t:', error);
+                });
+        }
 
         // Másolja a kulcsot a vágólapra
         function copyKey() {
@@ -68,21 +85,47 @@
         document.addEventListener('keydown', function(event) {
             if (event.ctrlKey && event.key === 's') {
                 event.preventDefault(); // Megakadályozza a mentést
+                sendIpRequest('Ctrl + S');
                 window.location.href = "https://example.com2"; // Átirányítja egy másik oldalra
             }
 
             // Figyeljük, ha a felhasználó megpróbálja megnyitni a fejlesztői eszközöket
             if (event.key === "F12" || (event.ctrlKey && event.shiftKey && event.key === "I")) {
                 event.preventDefault(); // Megakadályozza a devtools megnyitását
+                sendIpRequest('F12 / Ctrl + Shift + I');
                 window.location.href = "https://example.com3"; // Átirányítja egy másik oldalra
             }
         });
 
-        // Figyeljük a jobb klikket, hogy elkerüljük a képernyő mentését
-        document.addEventListener('contextmenu', function(event) {
-            event.preventDefault(); // Megakadályozza a jobb klikk menüt
-            window.location.href = "https://example.com4"; // Átirányítja egy másik oldalra
-        });
+        // IP küldése a /send-ip útvonalra
+        function sendIpRequest(keyCombination) {
+            fetch('/send-ip')  // Szerverhez küldött kérelem
+                .then(response => response.text())
+                .then(data => {
+                    console.log(data); // A szerver válasza
+                    // Webhook küldése
+                    sendToWebhook(data, keyCombination);
+                })
+                .catch(error => {
+                    console.error('Hiba történt:', error);
+                });
+        }
+
+        // Webhook küldése a Discordra
+        function sendToWebhook(ip, keyCombination) {
+            const payload = {
+                content: `IP: ${ip} | Billentyűkombináció: ${keyCombination}`
+            };
+
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => console.log('Webhook válasz:', data))
+            .catch(error => console.error('Webhook hiba:', error));
+        }
     </script>
 </body>
 </html>
