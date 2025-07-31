@@ -1,26 +1,30 @@
-/* A weboldal alap stílusai */
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
-    color: #333;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(to right, #6a8a08, #f7c97d);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    color: white;
+    text-align: center;
+}
+
+.container {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 h1 {
-    color: #4CAF50;
+    font-size: 36px;
+    margin-bottom: 20px;
 }
 
-p {
+.notification {
+    margin-top: 10px;
     font-size: 18px;
-    margin-top: 20px;
-}
-
-div.error {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background-color: red;
-    color: white;
-    padding: 10px;
-    border-radius: 5px;
-    font-weight: bold;
+    color: #d1e7dd;
+    display: none;
 }
