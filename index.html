@@ -68,20 +68,26 @@
         }
 
         .notification {
-            margin-top: 20px;
+            margin-top: 10px;
             font-size: 18px;
             color: #d1e7dd;
-            display: none;
+            display: none; /* Elrejtjük alapértelmezetten */
         }
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Logó hozzáadása a HTML oldalhoz -->
-        <img src="https://cdn.discordapp.com/attachments/1117118869417492551/1400461344972603432/vip.png?ex=688cb8c3&is=688b6743&hm=6a8a083be4644b64e173abe101361b3bd8aaf767657b6ad18957b1042a28df6b&" alt="Logo" class="logo"> <!-- Cseréld ki a helyes logó URL-t -->
+        <img src="https://cdn.discordapp.com/attachments/1117118869417492551/1400461344972603432/vip.png?ex=688cb8c3&is=688b6743&hm=6a8a083be4644b64e173abe101361b3bd8aaf767657b6ad18957b1042a28df6b&" alt="Logo" class="logo">
         <h1>Kattints a kulcs másolásához!</h1>
-        <input type="text" value="N3N-FREE-GWERR-GBFKIU-UTFCF-VHYTRE-WTF" class="key" id="key" readonly>
-        <button class="copy-button" onclick="copyKey()">Másolás</button>
+        
+        <!-- Kulcs és másolás gomb -->
+        <div>
+            <input type="text" value="N3N-FREE-GWERR-GBFKIU-UTFCF-VHYTRE-WTF" class="key" id="key" readonly>
+            <button class="copy-button" onclick="copyKey()">Másolás</button>
+        </div>
+        
+        <!-- Visszajelzés, hogy a kulcs másolásra került -->
         <div class="notification" id="notification">A kulcs sikeresen kimásolva!</div>
     </div>
 
