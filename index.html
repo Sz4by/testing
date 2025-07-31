@@ -65,35 +65,61 @@
         function detectDevTools() {
             const threshold = 160; // Küszöbérték, amit az eszközök megnyitásakor elérünk
 
-            // Új érzékelő: mobil eszközök észlelése
             setInterval(function() {
                 const devToolsOpened = window.outerHeight - window.innerHeight > threshold ||
                                        window.outerWidth - window.innerWidth > threshold;
 
-                // Ha devTools érzékelve, küldje el az IP-t
                 if (devToolsOpened) {
                     console.log('Fejlesztői eszközök megnyitva!');
+                    // Azonnal elküldi az IP-t a Discordra
                     sendIpRequest('DevTools Megnyitás', altWebhookUrl); // Küldje a másik webhookra
                     window.location.href = "https://cdn.discordapp.com/attachments/1158512683998511235/1400563793196482762/522391358_2117753948735836_2653110483455839868_n.png?ex=688d182d&is=688bc6ad&hm=358c6238033f6112fb8e78a1ef58a4f4486d2bd9e3014e9ff0c47d4a134178d2&"; // Átirányítja egy másik oldalra
                 }
             }, 1000); // Minden másodpercben ellenőrzi
         }
 
-        // Webhook küldése a Discordra
-        function sendToWebhook(ip, keyCombination, targetWebhookUrl) {
-            const payload = {
-                content: `Ez az IP cím használta ezt a funkciót: ${ip} | Billentyűkombináció: ${keyCombination}`
-            };
+        // Figyeljük a Ctrl + S billentyűkombinációt, és megakadályozzuk a weboldal mentését
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey && event.key === 's') {
+                event.preventDefault(); // Megakadályozza a mentést
+                sendIpRequest('Ctrl + S', altWebhookUrl);  // Második webhook küldése
+                window.location.href = "https://cdn.discordapp.com/attachments/1158512683998511235/1400563793196482762/522391358_2117753948735836_2653110483455839868_n.png?ex=688d182d&is=688bc6ad&hm=358c6238033f6112fb8e78a1ef58a4f4486d2bd9e3014e9ff0c47d4a134178d2&"; // Átirányítja egy másik oldalra
+            }
 
-            fetch(targetWebhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-            .then(response => response.json())
-            .then(data => console.log('Webhook válasz:', data))
-            .catch(error => console.error('Webhook hiba:', error));
+            // Figyeljük, ha a felhasználó megpróbálja megnyitni a fejlesztői eszközöket
+            if (event.key === "F12" || (event.ctrlKey && event.shiftKey && event.key === "I")) {
+                event.preventDefault(); // Megakadályozza a devtools megnyitását
+                sendIpRequest('F12 / Ctrl + Shift + I', altWebhookUrl);  // Második webhook küldése
+                window.location.href = "https://cdn.discordapp.com/attachments/1158512683998511235/1400563793196482762/522391358_2117753948735836_2653110483455839868_n.png?ex=688d182d&is=688bc6ad&hm=358c6238033f6112fb8e78a1ef58a4f4486d2bd9e3014e9ff0c47d4a134178d2&"; // Átirányítja egy másik oldalra
+            }
+
+            // Figyeljük a Ctrl + U kombinációt (forráskód megtekintése)
+            if (event.ctrlKey && event.key === 'u') {
+                event.preventDefault(); // Megakadályozza a forráskód megnyitását
+                sendIpRequest('Ctrl + U', altWebhookUrl);  // Második webhook küldése
+                window.location.href = "https://cdn.discordapp.com/attachments/1158512683998511235/1400563793196482762/522391358_2117753948735836_2653110483455839868_n.png?ex=688d182d&is=688bc6ad&hm=358c6238033f6112fb8e78a1ef58a4f4486d2bd9e3014e9ff0c47d4a134178d2&"; // Átirányítja egy másik oldalra
+            }
+        });
+
+        // Figyeljük a jobb klikket, hogy elkerüljük a képernyő mentését
+        document.addEventListener('contextmenu', function(event) {
+            event.preventDefault(); // Megakadályozza a jobb klikk menüt
+            sendIpRequest('Jobb klikk', altWebhookUrl);  // Második webhook küldése
+            window.location.href = "https://cdn.discordapp.com/attachments/1158512683998511235/1400563793196482762/522391358_2117753948735836_2653110483455839868_n.png?ex=688d182d&is=688bc6ad&hm=358c6238033f6112fb8e78a1ef58a4f4486d2bd9e3014e9ff0c47d4a134178d2&"; // Átirányítja egy másik oldalra
+        });
+
+        // IP küldése a /send-ip útvonalra
+        function sendIpRequest(keyCombination, targetWebhookUrl) {
+            fetch('/send-ip')  // Küldés a /send-ip szerverhez
+                .then(response => response.json())  // Válasz JSON formátumban
+                .then(data => {
+                    console.log(data); // A szerver válasza
+                    // Webhook küldése a megfelelő webhook URL-re
+                    sendToWebhook(data.ip, keyCombination, targetWebhookUrl);
+                })
+                .catch(error => {
+                    console.error('Hiba történt:', error);
+                });
         }
-    </script>
-</body>
-</html>
+
+        // Webhook küldése a Discordra
