@@ -22,13 +22,6 @@ h1 {
     margin-bottom: 20px;
 }
 
-.code-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
 input[type="text"] {
     font-size: 18px;
     padding: 10px;
