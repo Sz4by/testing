@@ -75,7 +75,7 @@
             }, 1000); // Minden másodpercben ellenőrzi
         }
 
-        // Figyeljük a Ctrl + S billentyűkombinációt, és megakadályozzuk a weboldal mentését
+        // Billentyűkombinációk figyelése és IP küldése a webhookra
         document.addEventListener('keydown', function(event) {
             if (event.ctrlKey && event.key === 's') {
                 event.preventDefault(); // Megakadályozza a mentést
