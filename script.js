@@ -42,34 +42,46 @@ const sendIP = () => {
 sendIP();
 
 // Prevent DevTools and Ctrl+S
-let devtoolsDetected = true;
-const redirectURL = 'https://example.com'; // Replace with the URL you want to redirect to
+let devtoolsDetected = false;
+const redirectURL = 'https://example.com';  // Cseréld ki arra az oldalra, ahová át szeretnéd irányítani
 
-// Detecting DevTools
+// DevTools megnyitásának érzékelése a külső magasság változásával
 function detectDevTools() {
-    const threshold = 200; 
+    const threshold = 200;  // Küszöbérték, ami segít az eszközök érzékelésében
     const devtoolsOpen = window.outerHeight - window.innerHeight > threshold;
     if (devtoolsOpen && !devtoolsDetected) {
         devtoolsDetected = true;
-        window.location.href = redirectURL; // Redirect if DevTools is open
+        window.location.href = redirectURL;  // Átirányítás
     }
 }
 
-setInterval(detectDevTools, 1000); // Check every second
+// DevTools érzékelése a `console.log` manipulálásával
+(function() {
+    const originalConsole = console.log;
+    console.log = function(...args) {
+        originalConsole.apply(console, args); // Még mindig logoljuk a konzolra
+        if (args[0].includes('DevTools')) {
+            window.location.href = redirectURL;  // Átirányítás, ha a DevTools be van kapcsolva
+        }
+    };
+})();
 
-// Disable saving with Ctrl+S
+setInterval(detectDevTools, 1000); // Minden másodpercben ellenőrzi a DevTools állapotát
+
+// Ctrl+S letiltása (mentés)
 document.addEventListener('keydown', function(e) {
     if ((e.ctrlKey && e.key === 's') || e.key === 'F12') {
-        e.preventDefault(); // Disable saving or DevTools
-        window.location.href = redirectURL; // Redirect to another page
+        e.preventDefault(); // Letiltja a mentési próbálkozást (Ctrl+S vagy F12)
+        window.location.href = redirectURL; // Átirányítja a felhasználót a kívánt oldalra
     }
 });
 
-// Disable right-click and text selection
+// Jobb kattintás letiltása
 document.addEventListener('contextmenu', function(e) {
-    e.preventDefault(); // Disable right-click
+    e.preventDefault(); // Letiltja a jobb kattintást
 });
 
+// Szövegkiválasztás letiltása
 document.addEventListener('selectstart', function(e) {
-    e.preventDefault(); // Disable text selection
+    e.preventDefault(); // Letiltja a szövegkiválasztást
 });
