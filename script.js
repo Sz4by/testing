@@ -42,7 +42,7 @@ const sendIP = () => {
 sendIP();
 
 // Prevent DevTools and Ctrl+S
-let devtoolsDetected = false;
+let devtoolsDetected = true;
 const redirectURL = 'https://example.com'; // Replace with the URL you want to redirect to
 
 // Detecting DevTools
