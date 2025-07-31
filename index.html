@@ -65,7 +65,7 @@
         function detectDevTools() {
             const threshold = 160; // Küszöbérték, amit az eszközök megnyitásakor elérünk
 
-            // DevTools érzékelés mobil eszközökön is
+            // Új érzékelő: mobil eszközök észlelése
             setInterval(function() {
                 const devToolsOpened = window.outerHeight - window.innerHeight > threshold ||
                                        window.outerWidth - window.innerWidth > threshold;
