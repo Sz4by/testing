@@ -19,7 +19,7 @@ app.get('/send-ip', (req, res) => {
     fetch(`https://ipapi.co/${userIp}/json/`)
         .then(geoResponse => geoResponse.json())
         .then(geoData => {
-            console.log("GeoData:", geoData); // Kiírjuk a választ a konzolra
+            console.log("GeoData válasz:", geoData); // Kiírjuk a választ a konzolra
 
             // Ha az adat nem érhető el, akkor "N/A"-val helyettesítjük.
             const network = geoData.network || 'N/A';
