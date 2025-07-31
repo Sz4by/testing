@@ -61,29 +61,30 @@ button:hover {
     display: none;
 }
 
-/* Homályos háttér */
+/* Értesítő ablak */
+#notification {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    padding: 20px 30px;
+    border-radius: 10px;
+    font-size: 18px;
+    text-align: center;
+    z-index: 10001;
+    display: none;
+}
+
 #backgroundOverlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.7); /* Homályos háttér */
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 10000;
     display: none;
-    z-index: 999;
-}
-
-/* Értesítés a képernyő közepén */
-#notification {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: #ffcc00;
-    color: black;
-    padding: 20px;
-    border-radius: 10px;
-    font-size: 18px;
-    display: none;
-    z-index: 1000;
 }
