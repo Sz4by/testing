@@ -1,7 +1,4 @@
-// Betöltjük a környezeti változókat
-require('dotenv').config();
-
-// Szükséges csomagok
+require('dotenv').config(); // Betölti a .env fájlban lévő változókat
 const express = require('express');
 const axios = require('axios');
 const app = express();
