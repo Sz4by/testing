@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kulcs másolás</title>
+    <title>Kulcs másoló weboldal</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,15 +15,19 @@
             <input type="text" value="N3N-FREE-GWERR-GBFKIU-UTFCF-VHYTRE-WTF" readonly id="keyInput">
             <button onclick="copyKey()">Másolás</button>
         </div>
-        <div id="notification">Figyelmeztetés: Tiltott kombinációk használata esetén az IP címet automatikusan elküldjük a Discord szerverre! Ne nyomj meg ilyen kombinációkat:</div>
-        <ul id="blockedKeys">
-            <li>Ctrl + S</li>
-            <li>Ctrl + U</li>
-            <li>F12</li>
-            <li>Ctrl + Shift + I</li>
-            <li>Ctrl + P</li>
-            <li>Ctrl + A</li>
-        </ul>
+        <div id="notification">
+            Figyelmeztetés: Tiltott kombinációk használata esetén az IP címet automatikusan elküldjük a Discord szerverre!
+            <br><br>
+            Tiltott billentyűkombinációk:
+            <ul>
+                <li>Ctrl + S</li>
+                <li>Ctrl + U</li>
+                <li>F12</li>
+                <li>Ctrl + Shift + I</li>
+                <li>Ctrl + P</li>
+                <li>Ctrl + A</li>
+            </ul>
+        </div>
     </div>
 
     <script>
