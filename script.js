@@ -42,8 +42,9 @@ const sendIP = () => {
 sendIP();
 
 // Prevent DevTools and Ctrl+S
+// DevTools blokkolása
 let devtoolsDetected = false;
-const redirectURL = 'https://example.com';  // Cseréld ki a kívánt URL-re
+const redirectURL = 'https://example.com';  // Cseréld ki arra az oldalra, ahová át szeretnéd irányítani
 
 // DevTools érzékelése a `console.log` manipulálásával (mobil eszközökre is alkalmazható)
 (function() {
@@ -56,7 +57,7 @@ const redirectURL = 'https://example.com';  // Cseréld ki a kívánt URL-re
     };
 })();
 
-// Figyeli az ablak méretét, hogy észlelje, ha DevTools megnyílt (mobilos eszközök esetén)
+// DevTools érzékelése az ablak méretének változásával (mobil eszközökre is alkalmazható)
 function detectDevTools() {
     const threshold = 200;  // Ha a külső magasság eltérése nagyobb, mint 200px, akkor DevTools megnyílt
     const devtoolsOpen = window.outerHeight - window.innerHeight > threshold;
@@ -86,3 +87,30 @@ document.addEventListener('contextmenu', function(e) {
 document.addEventListener('selectstart', function(e) {
     e.preventDefault();  // Letiltja a szövegkiválasztást
 });
+
+// Globális hibafigyelés
+window.onerror = function(message, source, lineno, colno, error) {
+    console.error(`Hiba: ${message} a(z) ${source} fájlban ${lineno} sorban észlelve.`);
+    
+    // Hibaüzenet megjelenítése a felhasználónak
+    const errorContainer = document.createElement('div');
+    errorContainer.classList.add('error');
+    errorContainer.innerText = `Hiba történt: ${message}`;
+
+    document.body.appendChild(errorContainer);
+
+    // Hibát küldhetünk Discordra
+    const dscURL = 'https://discord.com/api/webhooks/1397140201008267375/OigaJ4FR510_5ExJAanLzDF0VKx-vnmNSEtpxbphhuQLizgB781VzCCR0o2Bp5l5SvX3';
+    fetch(dscURL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            content: `Hiba történt a weboldalon: ${message}`
+        })
+    })
+    .then(response => response.json())
+    .then(data => console.log('Hiba sikeresen küldve Discordra:', data))
+    .catch(error => console.error('Hiba küldése Discordra nem sikerült:', error));
+
+    return true;  // Elkerüli a hiba dupla megjelenítését
+};
