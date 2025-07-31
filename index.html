@@ -19,7 +19,7 @@
             font-size: 18px;
             text-align: center;
             display: none;
-            z-index: 9999;
+            z-index: 10000; /* Magas z-index a középen lévő értesítéshez */
         }
 
         /* Homályos háttér */
@@ -29,9 +29,9 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            z-index: 9998;
-            display: none;
+            background: rgba(0, 0, 0, 0.5); /* Homályos háttér */
+            z-index: 9999; /* Az értesítés mögött legyen */
+            display: none; /* Kezdetben nem látszik */
         }
     </style>
 </head>
