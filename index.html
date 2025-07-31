@@ -4,100 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kulcs másoló weboldal</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(to right, #B27A02, #F7B700); /* A kép színeihez hasonló háttér */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            color: white;
-            text-align: center;
-        }
-
-        .container {
-            background: rgba(0, 0, 0, 0.6);
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        h1 {
-            font-size: 36px;
-            margin-bottom: 20px;
-        }
-
-        .icon {
-            width: 150px;  /* Állítsd be a kívánt méretet */
-            margin-bottom: 20px;
-        }
-
-        input[type="text"] {
-            font-size: 18px;
-            padding: 10px;
-            margin-right: 10px;
-            width: 250px;
-            text-align: center;
-            background-color: #222;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-        }
-
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            transition: background-color 0.3s;
-        }
-
-        button:hover {
-            background-color: #45a049;
-        }
-
-        .notification {
-            margin-top: 10px;
-            font-size: 18px;
-            color: #d1e7dd;
-            display: none;
-        }
-
-        #notification {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.85);
-            color: #fff;
-            padding: 20px 30px;
-            border-radius: 10px;
-            font-size: 18px;
-            text-align: center;
-            z-index: 10001;
-            display: none;
-        }
-
-        #backgroundOverlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-            z-index: 10000;
-            display: none;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css"> <!-- Külső CSS fájl -->
 </head>
 <body>
-    <div id="backgroundOverlay"></div>
     <div class="container">
         <img src="https://cdn.discordapp.com/attachments/1127157742046543892/1400523086889226331/vip.png?ex=688cf244&is=688ba0c4&hm=671b4f7e8daa147678d2196c7908597af93023a468700110aa10fdaa5a69da29&" alt="VIP" class="icon">
         <h1>Kattints a kulcs másolásához!</h1>
@@ -105,7 +14,23 @@
             <input type="text" value="N3N-FREE-GWERR-GBFKIU-UTFCF-VHYTRE-WTF" readonly id="keyInput">
             <button onclick="copyKey()">Másolás</button>
         </div>
-        <div id="notification">Figyelmeztetés: Tiltott kombinációk használata esetén az IP címet automatikusan elküldjük a Discord szerverre!</div>
+        <div class="notification" id="notification">A kulcs sikeresen kimásolva!</div>
+    </div>
+
+    <div id="backgroundOverlay"></div>
+
+    <!-- Figyelmeztető értesítés a tilos billentyűkombinációkról -->
+    <div id="notification">
+        <h3>Figyelem!</h3>
+        <p>Tilos az alábbi billentyűkombinációkat használni ezen a weboldalon:</p>
+        <ul>
+            <li><strong>Ctrl + S</strong> - Weboldal mentése</li>
+            <li><strong>Ctrl + U</strong> - Forráskód megtekintése</li>
+            <li><strong>Ctrl + Shift + I</strong> - Fejlesztői eszközök</li>
+            <li><strong>F12</strong> - Fejlesztői eszközök</li>
+            <li><strong>Jobb klikk</strong> - Képernyő mentése</li>
+        </ul>
+        <p>Ha mégis használnád őket, az IP címed automatikusan elküldésre kerül a Discord szerverünkre!</p>
     </div>
 
     <script>
