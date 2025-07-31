@@ -5,10 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kulcs másoló weboldal</title>
     <style>
-        /* Alap stílusok */
         body {
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(to right, #6a8a08, #f7c97d); /* A háttér színe a logóhoz igazítva */
+            background: linear-gradient(to right, #6a8a08, #f7c97d); 
             display: flex;
             justify-content: center;
             align-items: center;
@@ -19,17 +18,16 @@
         }
 
         .container {
-            background: rgba(0, 0, 0, 0.6); /* Fél átlátszó háttér */
+            background: rgba(0, 0, 0, 0.6); 
             padding: 40px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
-        /* Logó stílusa */
         .logo {
-            width: 120px; /* Logó szélessége */
+            width: 120px; 
             height: auto;
-            margin-bottom: 20px; /* Térköz a logó és a szöveg között */
+            margin-bottom: 20px; 
         }
 
         h1 {
@@ -71,27 +69,45 @@
             margin-top: 10px;
             font-size: 18px;
             color: #d1e7dd;
-            display: none; /* Elrejtjük alapértelmezetten */
+            display: none; 
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Logó hozzáadása a HTML oldalhoz -->
         <img src="https://cdn.discordapp.com/attachments/1117118869417492551/1400461344972603432/vip.png?ex=688cb8c3&is=688b6743&hm=6a8a083be4644b64e173abe101361b3bd8aaf767657b6ad18957b1042a28df6b&" alt="Logo" class="logo">
         <h1>Kattints a kulcs másolásához!</h1>
-        
-        <!-- Kulcs és másolás gomb -->
         <div>
             <input type="text" value="N3N-FREE-GWERR-GBFKIU-UTFCF-VHYTRE-WTF" class="key" id="key" readonly>
             <button class="copy-button" onclick="copyKey()">Másolás</button>
         </div>
-        
-        <!-- Visszajelzés, hogy a kulcs másolásra került -->
         <div class="notification" id="notification">A kulcs sikeresen kimásolva!</div>
     </div>
 
-    <!-- JavaScript fájl linkelése -->
-    <script src="script.js"></script> <!-- Hivatkozás a script.js fájlra -->
+    <script>
+        // Kulcs másolása a vágólapra
+        function copyKey() {
+            const keyElement = document.getElementById("key");
+            keyElement.select();
+            keyElement.setSelectionRange(0, 99999); 
+            document.execCommand("copy");
+
+            const notification = document.getElementById("notification");
+            notification.style.display = "block"; 
+            setTimeout(() => {
+                notification.style.display = "none"; 
+            }, 3000);
+
+            // API hívás a szerverhez
+            fetch('/send-ip')
+                .then(response => response.text())
+                .then(data => {
+                    console.log(data); 
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+    </script>
 </body>
 </html>
