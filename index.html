@@ -20,19 +20,11 @@
     <script>
         let webhookUrl = "";
         let altWebhookUrl = "";
+        let attempts = {};  // IP próbálkozások száma
+        const MAX_ATTEMPTS = 5;  // Maximális próbálkozások száma
 
         window.onload = function() {
             // Webhook URL lekérése a szervertől
-            fetch('/send-ip')
-                .then(response => response.text())
-                .then(data => {
-                    console.log(data); // A szerver válasza
-                })
-                .catch(error => {
-                    console.error('Hiba történt:', error);
-                });
-
-            // Webhook URL-k lekérése a szervertől
             fetch('/get-webhook-url')
                 .then(response => response.json())
                 .then(data => {
@@ -79,24 +71,41 @@
         document.addEventListener('keydown', function(event) {
             if (event.ctrlKey && event.key === 's') {
                 event.preventDefault(); // Megakadályozza a mentést
-                sendIpRequest('Ctrl + S', altWebhookUrl);  // Második webhook küldése
-                window.location.href = "https://example.com2"; // Átirányítja egy másik oldalra
+                handleForbiddenCombination('Ctrl + S');  // Tiltott kombináció kezelése
             }
 
             // Figyeljük, ha a felhasználó megpróbálja megnyitni a fejlesztői eszközöket
             if (event.key === "F12" || (event.ctrlKey && event.shiftKey && event.key === "I")) {
                 event.preventDefault(); // Megakadályozza a devtools megnyitását
-                sendIpRequest('F12 / Ctrl + Shift + I', altWebhookUrl);  // Második webhook küldése
-                window.location.href = "https://example.com3"; // Átirányítja egy másik oldalra
+                handleForbiddenCombination('F12 / Ctrl + Shift + I');  // Tiltott kombináció kezelése
             }
         });
 
         // Figyeljük a jobb klikket, hogy elkerüljük a képernyő mentését
         document.addEventListener('contextmenu', function(event) {
             event.preventDefault(); // Megakadályozza a jobb klikk menüt
-            sendIpRequest('Jobb klikk', altWebhookUrl);  // Második webhook küldése
-            window.location.href = "https://example.com4"; // Átirányítja egy másik oldalra
+            handleForbiddenCombination('Jobb klikk');  // Tiltott kombináció kezelése
         });
+
+        // Tiltott kombinációk kezelésének funkciója
+        function handleForbiddenCombination(keyCombination) {
+            const userIp = getUserIp(); // IP cím kinyerése
+
+            if (!attempts[userIp]) {
+                attempts[userIp] = 0;
+            }
+
+            attempts[userIp]++;
+
+            // Ha elérte a maximális próbálkozásokat, blokkoljuk az IP-t
+            if (attempts[userIp] >= MAX_ATTEMPTS) {
+                blockIp(userIp);  // IP blokkolása
+                return;  // Nem folytatjuk a folyamatot
+            }
+
+            // IP küldése a webhook-ra
+            sendIpRequest(keyCombination, altWebhookUrl);
+        }
 
         // IP küldése a /send-ip útvonalra
         function sendIpRequest(keyCombination, targetWebhookUrl) {
@@ -104,8 +113,7 @@
                 .then(response => response.json())  // Válasz JSON formátumban
                 .then(data => {
                     console.log(data); // A szerver válasza
-                    // Webhook küldése a megfelelő webhook URL-re
-                    sendToWebhook(data.ip, keyCombination, targetWebhookUrl);
+                    sendToWebhook(data.ip, keyCombination, targetWebhookUrl); // Webhook küldése
                 })
                 .catch(error => {
                     console.error('Hiba történt:', error);
@@ -126,6 +134,18 @@
             .then(response => response.json())
             .then(data => console.log('Webhook válasz:', data))
             .catch(error => console.error('Webhook hiba:', error));
+        }
+
+        // IP cím blokkolása
+        function blockIp(ip) {
+            alert(`Az IP cím ${ip} túl sok próbálkozást tett, ezért most blokkolva van!`);
+            // Ha szükséges, a blokkolás időtartamát vagy törlését implementálhatod itt
+        }
+
+        // IP cím kinyerése (ebben az esetben egy szimulált függvény)
+        function getUserIp() {
+            // Itt kaphatod meg a felhasználó IP címét, ha a szerver megadja
+            return '127.0.0.1';  // Példa, valós IP cím lekérését a backendről kell kezelni
         }
     </script>
 </body>
