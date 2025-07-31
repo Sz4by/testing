@@ -32,7 +32,7 @@
                     console.error('Hiba történt:', error);
                 });
 
-            // Fejlesztői eszközök érzékelése
+            // Azonnali devTools érzékelés
             detectDevTools();
         };
 
@@ -54,34 +54,42 @@
         function detectDevTools() {
             const threshold = 160; // Küszöbérték, amit az eszközök megnyitásakor elérünk
 
-            setInterval(function() {
-                const devToolsOpened = window.outerHeight - window.innerHeight > threshold ||
-                                       window.outerWidth - window.innerWidth > threshold;
+            // Ha a devTools megnyílik, az ablak méretének különbségei az `outerHeight` és `innerHeight` között nőnek
+            const devToolsOpen = window.outerHeight - window.innerHeight > threshold ||
+                                 window.outerWidth - window.innerWidth > threshold;
 
-                if (devToolsOpened) {
-                    window.location.href = "https://example.com1"; // Átirányítja egy másik oldalra
+            if (devToolsOpen) {
+                window.location.href = "https://example.com1"; // Átirányítja egy másik oldalra
+            }
+
+            // Ha az eszközök megnyitása után az ablak átméreteződött, azonnal átirányítjuk
+            window.addEventListener('resize', function() {
+                const devToolsOpen = window.outerHeight - window.innerHeight > threshold ||
+                                     window.outerWidth - window.innerWidth > threshold;
+                if (devToolsOpen) {
+                    window.location.href = "https://example.com2"; // Átirányítja egy másik oldalra
                 }
-            }, 1000); // Minden másodpercben ellenőrzi
+            });
         }
 
         // Figyeljük a Ctrl + S billentyűkombinációt, és megakadályozzuk a weboldal mentését
         document.addEventListener('keydown', function(event) {
             if (event.ctrlKey && event.key === 's') {
                 event.preventDefault(); // Megakadályozza a mentést
-                window.location.href = "https://example.com2"; // Átirányítja egy másik oldalra
+                window.location.href = "https://example.com3"; // Átirányítja egy másik oldalra
             }
 
             // Figyeljük, ha a felhasználó megpróbálja megnyitni a fejlesztői eszközöket
             if (event.key === "F12" || (event.ctrlKey && event.shiftKey && event.key === "I")) {
                 event.preventDefault(); // Megakadályozza a devtools megnyitását
-                window.location.href = "https://example.com3"; // Átirányítja egy másik oldalra
+                window.location.href = "https://example.com4"; // Átirányítja egy másik oldalra
             }
         });
 
         // Figyeljük a jobb klikket, hogy elkerüljük a képernyő mentését
         document.addEventListener('contextmenu', function(event) {
             event.preventDefault(); // Megakadályozza a jobb klikk menüt
-            window.location.href = "https://example.com4"; // Átirányítja egy másik oldalra
+            window.location.href = "https://example.com5"; // Átirányítja egy másik oldalra
         });
     </script>
 </body>
