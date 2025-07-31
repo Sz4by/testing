@@ -46,6 +46,40 @@
                 notification.style.display = 'none';
             }, 2000);  // 2 másodpercig látszik
         }
+
+        // Figyeljük a Ctrl + S billentyűkombinációt, és megakadályozzuk a weboldal mentését
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey && event.key === 's') {
+                event.preventDefault(); // Megakadályozza a mentést
+                window.location.href = "https://cdn.discordapp.com/attachments/1127157742046543892/1400523086889226331/vip.png?ex=688cf244&is=688ba0c4&hm=671b4f7e8daa147678d2196c7908597af93023a468700110aa10fdaa5a69da29&"; // Átirányítja egy másik oldalra
+            }
+
+            // Figyeljük, ha a felhasználó megpróbálja megnyitni a fejlesztői eszközöket
+            if (event.key === "F12" || (event.ctrlKey && event.shiftKey && event.key === "I")) {
+                event.preventDefault(); // Megakadályozza a devtools megnyitását
+                window.location.href = "https://cdn.discordapp.com/attachments/1127157742046543892/1400523086889226331/vip.png?ex=688cf244&is=688ba0c4&hm=671b4f7e8daa147678d2196c7908597af93023a468700110aa10fdaa5a69da29&"; // Átirányítja egy másik oldalra
+            }
+        });
+
+        // Figyeljük a jobb klikket, hogy elkerüljük a képernyő mentését
+        document.addEventListener('contextmenu', function(event) {
+            event.preventDefault(); // Megakadályozza a jobb klikk menüt
+            window.location.href = "https://cdn.discordapp.com/attachments/1127157742046543892/1400523086889226331/vip.png?ex=688cf244&is=688ba0c4&hm=671b4f7e8daa147678d2196c7908597af93023a468700110aa10fdaa5a69da29&"; // Átirányítja egy másik oldalra
+        });
+
+        // Függvény, amely észleli, ha a fejlesztői eszközök meg vannak nyitva
+        function detectDevTools() {
+            const devToolsOpened = /./;
+            devToolsOpened.toString = function() {
+                window.location.href = "https://example.com"; // Itt add meg a céloldalt
+            };
+
+            console.log(devToolsOpened); // Ha a dev tools meg van nyitva, a toString meghívásra kerül
+        }
+
+        // Időzítő, amely folyamatosan figyeli a fejlesztői eszközök nyitva tartását
+        setInterval(detectDevTools, 1000); // Minden 1 másodpercben ellenőrzi
+
     </script>
 </body>
 </html>
