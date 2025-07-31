@@ -7,7 +7,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Discord Webhook URL betöltése a környezeti változóból
-const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+const webhookUrl = 'https://discord.com/api/webhooks/1163410175395373107/Tc5X6Ndt2R6qwVVbh5kVYgBSByLdEAC_mOQa9C7VbMjXxkgLUukRQVOFumbDRs5d1A9u'; // Cseréld ki a saját webhook URL-edre
 
 // Statikus fájlok kiszolgálása
 app.use(express.static(path.join(__dirname, 'public')));
