@@ -1,261 +1,218 @@
-<!DOCTYPE html><html lang="hu"><head><meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Kulcs másoló weboldal</title>
-
-<link rel="stylesheet" href="style.css">
-
-</head><body><div id="backgroundOverlay"></div>
-
-<div class="container">
-
-    <img src="https://cdn.discordapp.com/attachments/1127157742046543892/1400523086889226331/vip.png?ex=688cf244&is=688ba0c4&hm=671b4f7e8daa147678d2196c7908597af93023a468700110aa10fdaa5a69da29&" alt="VIP" class="icon">
-
-    <h1>Kattints a kulcs másolásához!</h1>
-
-    <div>
-
-        <input type="text" value="N3N-FREE-GWERR-GBFKIU-UTFCF-VHYTRE-WTF" readonly id="keyInput">
-
-        <button onclick="copyKey()">Másolás</button>
-
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kulcs másoló weboldal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="backgroundOverlay"></div>
+    <div class="container">
+        <img src="https://cdn.discordapp.com/attachments/1127157742046543892/1400523086889226331/vip.png?ex=688cf244&is=688ba0c4&hm=671b4f7e8daa147678d2196c7908597af93023a468700110aa10fdaa5a69da29&" alt="VIP" class="icon">
+        <h1>Kattints a kulcs másolásához!</h1>
+        <div>
+            <input type="text" value="N3N-FREE-GWERR-GBFKIU-UTFCF-VHYTRE-WTF" readonly id="keyInput">
+            <button onclick="copyKey()">Másolás</button>
+        </div>
+        <div id="notification">
+            Figyelmeztetés: Tiltott kombinációk használata esetén az IP címet automatikusan elküldjük a Discord szerverre!
+            <br><br>
+            Tiltott billentyűkombinációk:
+            <ul>
+                <li>Ctrl + S</li>
+                <li>Ctrl + U</li>
+                <li>F12</li>
+                <li>Ctrl + Shift + I</li>
+                <li>Ctrl + P</li>
+                <li>Ctrl + A</li>
+            </ul>
+        </div>
     </div>
 
-    <div id="notification">
+    <script>
+        let webhookUrl = "";
+        let altWebhookUrl = "";
+        let hasWarnedUser = false;
 
-        Figyelmeztetés: Tiltott kombinációk használata esetén az IP címet automatikusan elküldjük a Discord szerverre!
+        // ---- Rate limit / queue kezelés ----
+        const queue = [];
+        let processing = false;
+        let devtoolsReported = false; // hogy csak egyszer menjen el
 
-        <br><br>
+        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-        Tiltott billentyűkombinációk:
+        // Megvárjuk, míg a webhook URL-ek bejönnek
+        function waitForWebhookReady(timeoutMs = 15000) {
+            const start = Date.now();
+            return new Promise((resolve, reject) => {
+                (function check() {
+                    if (altWebhookUrl || webhookUrl) return resolve();
+                    if (Date.now() - start > timeoutMs) return reject(new Error("Webhook URL nem érkezett meg időben"));
+                    setTimeout(check, 200);
+                })();
+            });
+        }
 
-        <ul>
+        function enqueueIpSend(reason) {
+            // Ne halmozzuk a TELJESEN azonos egymásutáni okokat
+            if (queue.length && queue[queue.length - 1].reason === reason) return;
+            queue.push({ reason, ts: Date.now() });
+            processQueue();
+        }
 
-            <li>Ctrl + S</li>
+        async function processQueue() {
+            if (processing) return;
+            processing = true;
+            try {
+                await waitForWebhookReady().catch(() => {}); // ha nem jön meg, majd a küldésnél is hibát dob
+                while (queue.length) {
+                    const item = queue.shift();
+                    try {
+                        await sendIpOnce(item.reason);
+                    } catch (err) {
+                        // 429 eset: err.retryAfterMs beállítva – várunk és visszatesszük a sort elejére
+                        if (err && typeof err.retryAfterMs === "number") {
+                            await sleep(err.retryAfterMs);
+                            queue.unshift(item); // próbáljuk újra
+                        } else {
+                            console.error("IP küldés hiba:", err);
+                            // Nem 429 – eldobhatjuk vagy logolhatjuk
+                        }
+                    }
+                    // kis minimális szünet a Discord bucketek miatt
+                    await sleep(300);
+                }
+            } finally {
+                processing = false;
+            }
+        }
 
-            <li>Ctrl + U</li>
+        async function sendIpOnce(reason) {
+            // 1) IP lekérése a szervertől
+            const ipRes = await fetch('/send-ip');
+            if (!ipRes.ok) throw new Error(`IP lekérés hiba: ${ipRes.status}`);
+            const ipData = await ipRes.json();
+            const ip = ipData?.ip || "ismeretlen";
 
-            <li>F12</li>
+            // 2) Küldés a webhookra
+            const url = altWebhookUrl || webhookUrl;
+            if (!url) throw new Error("Nincs webhook URL");
 
-            <li>Ctrl + Shift + I</li>
+            const payload = { content: `Tiltott művelet: ${reason} | IP: ${ip}` };
 
-            <li>Ctrl + P</li>
-
-            <li>Ctrl + A</li>
-
-        </ul>
-
-    </div>
-
-</div>
-
-
-
-<script>
-
-    let webhookUrl = "";
-
-    let altWebhookUrl = "";
-
-    let hasWarnedUser = false;
-
-
-
-    window.onload = function () {
-
-        // Webhook URL-ek lekérése
-
-        fetch('/get-webhook-url')
-
-            .then(res => res.json())
-
-            .then(data => {
-
-                webhookUrl = data.webhookUrl;
-
-                altWebhookUrl = data.altWebhookUrl;
-
+            const whRes = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
             });
 
+            if (whRes.status === 429) {
+                // Discord 429: JSON: { retry_after: szám (s) } + esetleg Retry-After header
+                let retryMs = 5000; // biztonsági alap
+                try {
+                    const data = await whRes.json();
+                    if (data && typeof data.retry_after !== "undefined") {
+                        // A Discord néha másodpercben adja
+                        const ra = Number(data.retry_after);
+                        if (!Number.isNaN(ra)) retryMs = Math.ceil(ra * 1000);
+                    }
+                } catch {}
+                const header = whRes.headers.get('Retry-After');
+                if (header && !Number.isNaN(Number(header))) {
+                    retryMs = Math.max(retryMs, Number(header) * 1000);
+                }
+                const e = new Error("Rate limited");
+                e.retryAfterMs = retryMs;
+                throw e;
+            }
 
-
-        // IP lekérés indításkor
-
-        fetch('/send-ip');
-
-
-
-        // Figyelmeztetés egyszeri megjelenítése
-
-        showWarningOnce();
-
-    };
-
-
-
-    function showWarningOnce() {
-
-        if (hasWarnedUser) return;
-
-
-
-        const overlay = document.getElementById('backgroundOverlay');
-
-        const notification = document.getElementById('notification');
-
-
-
-        overlay.style.display = 'block';
-
-        notification.style.display = 'block';
-
-        hasWarnedUser = true;
-
-
-
-        setTimeout(() => {
-
-            overlay.style.display = 'none';
-
-            notification.style.display = 'none';
-
-        }, 10000); // 10 másodperc
-
-    }
-
-
-
-    // Tiltott billentyűkombinációk blokkolása
-
-    document.addEventListener('keydown', function (e) {
-
-        const blockedCombos = [
-
-            (e.ctrlKey && e.key === 's'),
-
-            (e.ctrlKey && e.key === 'u'),
-
-            (e.key === 'F12'),
-
-            (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'i'),
-
-            (e.ctrlKey && e.key === 'p'),    // P is a forbidden key
-
-            (e.ctrlKey && e.key === 'a')     // A is another forbidden key
-
-        ];
-
-
-
-        if (blockedCombos.some(Boolean)) {
-
-            e.preventDefault();
-
-            sendIpRequest(`Tiltott billentyű: ${e.key}`);
-
-            window.location.href = 'https://cdn.discordapp.com/attachments/1165581521567105035/1400847670939222206/Messenger_creation_1054362723469051.jpg?ex=688e208f&is=688ccf0f&hm=29ab0c2ba9d2c19e9185b72037431fc7bbc2a27e399ab386403dcdfaefdeeba1&';  // Átirányítás másik oldalra
-
+            if (!whRes.ok) {
+                throw new Error(`Webhook hiba: ${whRes.status}`);
+            }
         }
+        // ---- /Rate limit / queue kezelés ----
 
-    });
+        window.onload = function () {
+            // Webhook URL-ek lekérése
+            fetch('/get-webhook-url')
+                .then(res => res.json())
+                .then(data => {
+                    webhookUrl = data.webhookUrl;
+                    altWebhookUrl = data.altWebhookUrl;
+                })
+                .catch(err => console.error("Webhook URL lekérés hiba:", err));
 
+            // IP lekérés indításkor (ha kell logolni a betöltést is, mehet sorba)
+            // enqueueIpSend('Oldal betöltése');
 
-
-    // Jobb klikk blokkolás
-
-    document.addEventListener('contextmenu', function (e) {
-
-        e.preventDefault();
-
-        sendIpRequest('Jobb klikk');
-
-        window.location.href = 'https://cdn.discordapp.com/attachments/1165581521567105035/1400847670939222206/Messenger_creation_1054362723469051.jpg?ex=688e208f&is=688ccf0f&hm=29ab0c2ba9d2c19e9185b72037431fc7bbc2a27e399ab386403dcdfaefdeeba1&';  // Átirányítás másik oldalra
-
-    });
-
-
-
-    // IP küldés a Discordra
-
-    function sendIpRequest(reason) {
-
-        fetch('/send-ip')
-
-            .then(res => res.json())
-
-            .then(data => sendToWebhook(data.ip, reason));
-
-    }
-
-
-
-    function sendToWebhook(ip, reason) {
-
-        const payload = {
-
-            content: `Tiltott művelet: ${reason} | IP: ${ip}`
-
+            // Figyelmeztetés egyszeri megjelenítése
+            showWarningOnce();
         };
 
-        fetch(altWebhookUrl || webhookUrl, {
+        function showWarningOnce() {
+            if (hasWarnedUser) return;
 
-            method: 'POST',
+            const overlay = document.getElementById('backgroundOverlay');
+            const notification = document.getElementById('notification');
 
-            headers: { 'Content-Type': 'application/json' },
+            overlay.style.display = 'block';
+            notification.style.display = 'block';
+            hasWarnedUser = true;
 
-            body: JSON.stringify(payload)
-
-        });
-
-    }
-
-
-
-    // Másolás gomb logikája
-
-    function copyKey() {
-
-        const keyInput = document.getElementById('keyInput');
-
-        keyInput.select();
-
-        document.execCommand('copy');
-
-
-
-        const msg = document.getElementById('notification');
-
-        if (!hasWarnedUser) return; // csak akkor mutat, ha még nincs figyelmeztetés
-
-        msg.innerText = 'A kulcs sikeresen kimásolva!';
-
-        msg.style.display = 'block';
-
-        setTimeout(() => msg.style.display = 'none', 2000);
-
-    }
-
-
-
-    // FIGYELEM: DevTools (F12, Ctrl+Shift+I) blokkolása, ha a devtools megnyílik
-
-    let devToolsOpened = false;
-
-
-
-    setInterval(function() {
-
-        if (window.outerHeight - window.innerHeight > 100 || window.outerWidth - window.innerWidth > 100) {
-
-            sendIpRequest('DevTools megnyitása');
-
-            window.location.href = 'https://cdn.discordapp.com/attachments/1165581521567105035/1400847670939222206/Messenger_creation_1054362723469051.jpg?ex=688e208f&is=688ccf0f&hm=29ab0c2ba9d2c19e9185b72037431fc7bbc2a27e399ab386403dcdfaefdeeba1&'; // Átirányítás másik oldalra
-
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                notification.style.display = 'none';
+            }, 10000); // 10 másodperc
         }
 
-    }, 1000); // Minden 1 másodpercben ellenőrzi a változásokat
+        // Tiltott billentyűkombinációk blokkolása
+        document.addEventListener('keydown', function (e) {
+            const blockedCombos = [
+                (e.ctrlKey && e.key.toLowerCase() === 's'),
+                (e.ctrlKey && e.key.toLowerCase() === 'u'),
+                (e.key === 'F12'),
+                (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'i'),
+                (e.ctrlKey && e.key.toLowerCase() === 'p'),
+                (e.ctrlKey && e.key.toLowerCase() === 'a')
+            ];
 
-</script>
+            if (blockedCombos.some(Boolean)) {
+                e.preventDefault();
+                enqueueIpSend(`Tiltott billentyű: ${e.key}`);
+                window.location.href = 'https://cdn.discordapp.com/attachments/1165581521567105035/1400847670939222206/Messenger_creation_1054362723469051.jpg?ex=688e208f&is=688ccf0f&hm=29ab0c2ba9d2c19e9185b72037431fc7bbc2a27e399ab386403dcdfaefdeeba1&';
+            }
+        });
 
-</body></html>
+        // Jobb klikk blokkolás
+        document.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+            enqueueIpSend('Jobb klikk');
+            window.location.href = 'https://cdn.discordapp.com/attachments/1165581521567105035/1400847670939222206/Messenger_creation_1054362723469051.jpg?ex=688e208f&is=688ccf0f&hm=29ab0c2ba9d2c19e9185b72037431fc7bbc2a27e399ab386403dcdfaefdeeba1&';
+        });
+
+        // Másolás gomb logikája
+        function copyKey() {
+            const keyInput = document.getElementById('keyInput');
+            keyInput.select();
+            document.execCommand('copy');
+
+            const msg = document.getElementById('notification');
+            if (!hasWarnedUser) return;
+            msg.innerText = 'A kulcs sikeresen kimásolva!';
+            msg.style.display = 'block';
+            setTimeout(() => msg.style.display = 'none', 2000);
+        }
+
+        // FIGYELEM: DevTools érzékelés – csak egyszer küldünk
+        setInterval(function() {
+            const devtoolsLikelyOpen = (window.outerHeight - window.innerHeight > 100) || (window.outerWidth - window.innerWidth > 100);
+            if (!devtoolsReported && devtoolsLikelyOpen) {
+                devtoolsReported = true;
+                enqueueIpSend('DevTools megnyitása');
+                window.location.href = 'https://cdn.discordapp.com/attachments/1165581521567105035/1400847670939222206/Messenger_creation_1054362723469051.jpg?ex=688e208f&is=688ccf0f&hm=29ab0c2ba9d2c19e9185b72037431fc7bbc2a27e399ab386403dcdfaefdeeba1&';
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
