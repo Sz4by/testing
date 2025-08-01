@@ -69,7 +69,7 @@ async function sendToWebhook(url, payload) {
         const res = await axios.post(url, payload);
 
         if (res.status === 429) {  // Ha 429-es hibát kapunk (rate-limited)
-            const retryAfter = res.headers['retry-after'] || 5000;  // Várakozási idő (ms)
+            const retryAfter = parseInt(res.headers['retry-after'], 10) * 1000; // Másodpercekben kapott időt várakozásra
             console.log(`Rate-limited. Retry after ${retryAfter / 1000} seconds.`);
             await sleep(retryAfter);  // Várakozás
             return sendToWebhook(url, payload);  // Újrapróbálkozás
