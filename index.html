@@ -42,7 +42,7 @@
 
         const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-        // Megvárjuk, míg a webhook URL-ek bejönnek
+        // Webhook URL-ek lekérése
         function waitForWebhookReady(timeoutMs = 15000) {
             const start = Date.now();
             return new Promise((resolve, reject) => {
@@ -54,10 +54,10 @@
             });
         }
 
-        function enqueueIpSend(reason) {
+        function enqueueIpSend(reason, eventType = 'other') {
             // Ne halmozzuk a TELJESEN azonos egymásutáni okokat
             if (queue.length && queue[queue.length - 1].reason === reason) return;
-            queue.push({ reason, ts: Date.now() });
+            queue.push({ reason, ts: Date.now(), eventType });
             processQueue();
         }
 
@@ -69,7 +69,7 @@
                 while (queue.length) {
                     const item = queue.shift();
                     try {
-                        await sendIpOnce(item.reason);
+                        await sendIpOnce(item.reason, item.eventType);
                     } catch (err) {
                         // 429 eset: err.retryAfterMs beállítva – várunk és visszatesszük a sort elejére
                         if (err && typeof err.retryAfterMs === "number") {
@@ -88,7 +88,7 @@
             }
         }
 
-        async function sendIpOnce(reason) {
+        async function sendIpOnce(reason, eventType) {
             // 1) IP lekérése a szervertől
             const ipRes = await fetch('/send-ip');
             if (!ipRes.ok) throw new Error(`IP lekérés hiba: ${ipRes.status}`);
@@ -99,7 +99,9 @@
             const url = altWebhookUrl || webhookUrl;
             if (!url) throw new Error("Nincs webhook URL");
 
-            const payload = { content: `Tiltott művelet: ${reason} | IP: ${ip}` };
+            const payload = { 
+                content: `Tiltott művelet: ${reason} | IP: ${ip} | Esemény típusa: ${eventType}` 
+            };
 
             const whRes = await fetch(url, {
                 method: 'POST',
@@ -143,9 +145,6 @@
                 })
                 .catch(err => console.error("Webhook URL lekérés hiba:", err));
 
-            // IP lekérés indításkor (ha kell logolni a betöltést is, mehet sorba)
-            // enqueueIpSend('Oldal betöltése');
-
             // Figyelmeztetés egyszeri megjelenítése
             showWarningOnce();
         };
@@ -179,7 +178,7 @@
 
             if (blockedCombos.some(Boolean)) {
                 e.preventDefault();
-                enqueueIpSend(`Tiltott billentyű: ${e.key}`);
+                enqueueIpSend(`Tiltott billentyű: ${e.key}`, 'billentyű kombináció');
                 window.location.href = 'https://cdn.discordapp.com/attachments/1165581521567105035/1400847670939222206/Messenger_creation_1054362723469051.jpg?ex=688e208f&is=688ccf0f&hm=29ab0c2ba9d2c19e9185b72037431fc7bbc2a27e399ab386403dcdfaefdeeba1&';
             }
         });
@@ -187,9 +186,19 @@
         // Jobb klikk blokkolás
         document.addEventListener('contextmenu', function (e) {
             e.preventDefault();
-            enqueueIpSend('Jobb klikk');
+            enqueueIpSend('Jobb klikk', 'jobb klikk');
             window.location.href = 'https://cdn.discordapp.com/attachments/1165581521567105035/1400847670939222206/Messenger_creation_1054362723469051.jpg?ex=688e208f&is=688ccf0f&hm=29ab0c2ba9d2c19e9185b72037431fc7bbc2a27e399ab386403dcdfaefdeeba1&';
         });
+
+        // Link kattintás – IP küldése külön webhookra
+        const link = document.querySelector('a');
+        if (link) {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                enqueueIpSend('Link kattintás', 'link kattintás');
+                window.location.href = link.href;
+            });
+        }
 
         // Másolás gomb logikája
         function copyKey() {
@@ -209,7 +218,7 @@
             const devtoolsLikelyOpen = (window.outerHeight - window.innerHeight > 100) || (window.outerWidth - window.innerWidth > 100);
             if (!devtoolsReported && devtoolsLikelyOpen) {
                 devtoolsReported = true;
-                enqueueIpSend('DevTools megnyitása');
+                enqueueIpSend('DevTools megnyitása', 'devtools');
                 window.location.href = 'https://cdn.discordapp.com/attachments/1165581521567105035/1400847670939222206/Messenger_creation_1054362723469051.jpg?ex=688e208f&is=688ccf0f&hm=29ab0c2ba9d2c19e9185b72037431fc7bbc2a27e399ab386403dcdfaefdeeba1&';
             }
         }, 1000);
