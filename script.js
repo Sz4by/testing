@@ -14,9 +14,18 @@ const altWebhookUrl = process.env.DISCORD_ALT_WEBHOOK_URL;  // Az új webhook UR
 const ipinfoToken = process.env.IPINFO_TOKEN;
 const proxyCheckApiKey = process.env.PROXYCHECK_API_KEY; // ProxyCheck API kulcs
 
+// Engedélyezett IP-címek listája
+const allowedIps = process.env.ALLOWED_IPS ? process.env.ALLOWED_IPS.split(',') : [];  // Példa: "192.168.1.1,10.0.0.2"
+
 // Az alapértelmezett útvonal (/) kiszolgálja az index.html-t
 app.get('/', async (req, res) => {
     const userIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+
+    // Ha az IP engedélyezett, akkor nem ellenőrizzük VPN/Proxy használatot
+    if (allowedIps.includes(userIp)) {
+        console.log(`Engedélyezett IP: ${userIp}, VPN/Proxy ellenőrzés kihagyva.`);
+        return res.sendFile(path.join(__dirname, 'index.html'));  // Az index.html fájl kiszolgálása
+    }
 
     try {
         // ProxyCheck API használata a VPN/Proxy ellenőrzéshez
@@ -36,7 +45,7 @@ app.get('/', async (req, res) => {
                 embeds: [{
                     title: "VPN/Proxy használat észlelve!",
                     description: `**IP-cím >>** ${userIp}`,
-                    color: 0xFF0000  // Piros szín, hogy figyelmeztetést jelezzen
+                    color: 0xFF0000  // Piros szín
                 }]
             };
 
@@ -64,6 +73,12 @@ app.get('/get-webhook-url', (req, res) => {
 // /send-ip útvonal
 app.get('/send-ip', async (req, res) => {
     const userIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+
+    // Ha az IP engedélyezett, akkor nem ellenőrizzük VPN/Proxy használatot
+    if (allowedIps.includes(userIp)) {
+        console.log(`Engedélyezett IP: ${userIp}, VPN/Proxy ellenőrzés kihagyva.`);
+        return res.json({ ip: userIp }); // Visszaadja az IP-t JSON formátumban
+    }
 
     try {
         // ProxyCheck API használata a VPN/Proxy ellenőrzéshez
