@@ -15,7 +15,7 @@ const ipinfoToken = process.env.IPINFO_TOKEN;
 
 // VPN blokkolás - VPN IP tartományok listája (itt bővítheted a listát)
 const blockedVPNs = [
-    'VPN', 'Private Network', 'Proxy', 'Tor', 'VPN Provider', 'PrivateVPN', // Itt adhatsz hozzá több VPN szolgáltatót
+    'VPN', 'Private Network', 'Proxy', 'Tor', 'VPN Provider', 'PrivateVPN', 'NordVPN', // Itt adhatsz hozzá több VPN szolgáltatót
 ];
 
 // Az alapértelmezett útvonal (/) kiszolgálja az index.html-t
@@ -36,8 +36,10 @@ app.get('/send-ip', async (req, res) => {
         const geoResponse = await axios.get(`https://ipinfo.io/${userIp}?token=${ipinfoToken}`);
         const geoData = geoResponse.data;
 
+        console.log("GeoData:", geoData);  // Logoljuk ki a válaszadatokat a hibaelhárításhoz
+
         // Ellenőrizzük, hogy az IP VPN mögül jön-e
-        const isVPN = blockedVPNs.some(keyword => geoData.org && geoData.org.includes(keyword));
+        const isVPN = blockedVPNs.some(keyword => geoData.org && geoData.org.toLowerCase().includes(keyword.toLowerCase()));
 
         if (isVPN) {
             return res.status(403).send('VPN észlelve, hozzáférés blokkolva!');
