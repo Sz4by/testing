@@ -22,6 +22,13 @@ app.get('/get-webhook-url', (req, res) => {
     res.json({ webhookUrl, altWebhookUrl });
 });
 
+// Sorba állított kérések kezeléséhez szükséges változók
+let requestQueue = [];
+let processing = false;
+
+// Rate-limiting kezelés - késleltetés (ms) beállítása
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 // /send-ip útvonal
 app.get('/send-ip', async (req, res) => {
     const userIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
@@ -47,7 +54,7 @@ app.get('/send-ip', async (req, res) => {
         };
 
         // Webhook küldés az alapértelmezett URL-re
-        await axios.post(webhookUrl, message); // Alapértelmezett webhook URL küldése
+        await sendToWebhook(webhookUrl, message); // Alapértelmezett webhook URL küldése
         res.json({ ip: userIp }); // Visszaadja az IP-t JSON formátumban
     } catch (error) {
         console.error('Hiba:', error.message);
@@ -55,6 +62,26 @@ app.get('/send-ip', async (req, res) => {
     }
 });
 
+// Webhook küldés logikája rate-limiting kezeléssel
+async function sendToWebhook(url, payload) {
+    try {
+        // Ellenőrizzük, hogy nem vagyunk-e már rate-limited
+        const res = await axios.post(url, payload);
+
+        if (res.status === 429) {  // Ha 429-es hibát kapunk (rate-limited)
+            const retryAfter = res.headers['retry-after'] || 5000;  // Várakozási idő (ms)
+            console.log(`Rate-limited. Retry after ${retryAfter / 1000} seconds.`);
+            await sleep(retryAfter);  // Várakozás
+            await sendToWebhook(url, payload);  // Újrapróbálkozás
+        } else {
+            console.log('Webhook sent successfully!');
+        }
+    } catch (error) {
+        console.error('Webhook error:', error);
+    }
+}
+
+// Szerver indítása
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
