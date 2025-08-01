@@ -127,11 +127,11 @@
         let devToolsOpened = false;
 
         setInterval(function() {
-            if (window.DevTools || devToolsOpened) {
+            if (window.outerHeight - window.innerHeight > 100 || window.outerWidth - window.innerWidth > 100) {
                 sendIpRequest('DevTools megnyitása');
-                window.location.href = 'https://example.com';
+                window.location.href = 'https://example.com'; // Átirányítás másik oldalra
             }
-        }, 1000); // minden 1 másodpercben ellenőrzi, hogy megnyílt-e a devtools
+        }, 1000); // Minden 1 másodpercben ellenőrzi a változásokat
     </script>
 </body>
 </html>
