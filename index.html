@@ -35,6 +35,10 @@
         let altWebhookUrl = "";
         let hasWarnedUser = false;
 
+        // Késleltetés a kérések között
+        let lastRequestTime = 0;
+        const delayBetweenRequests = 2000; // 2 másodperc
+
         window.onload = function () {
             // Webhook URL-ek lekérése
             fetch('/get-webhook-url')
@@ -94,6 +98,12 @@
 
         // IP küldés a Discordra
         function sendIpRequest(reason) {
+            const currentTime = Date.now();
+            if (currentTime - lastRequestTime < delayBetweenRequests) {
+                return; // Ha túl gyorsan próbálkozunk újra, ne küldjünk kérést
+            }
+            lastRequestTime = currentTime;
+
             fetch('/send-ip')
                 .then(res => res.json())
                 .then(data => sendToWebhook(data.ip, reason));
