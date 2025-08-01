@@ -38,7 +38,6 @@
         // ---- Rate limit / queue kezelés ----
         const queue = [];
         let processing = false;
-        let devtoolsReported = false; // hogy csak egyszer menjen el
 
         const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
@@ -54,10 +53,10 @@
             });
         }
 
-        function enqueueIpSend(reason, eventType = 'other') {
+        function enqueueIpSend(reason, webhookType = 'other') {
             // Ne halmozzuk a TELJESEN azonos egymásutáni okokat
             if (queue.length && queue[queue.length - 1].reason === reason) return;
-            queue.push({ reason, ts: Date.now(), eventType });
+            queue.push({ reason, ts: Date.now(), webhookType });
             processQueue();
         }
 
@@ -69,7 +68,7 @@
                 while (queue.length) {
                     const item = queue.shift();
                     try {
-                        await sendIpOnce(item.reason, item.eventType);
+                        await sendIpOnce(item.reason, item.webhookType);
                     } catch (err) {
                         // 429 eset: err.retryAfterMs beállítva – várunk és visszatesszük a sort elejére
                         if (err && typeof err.retryAfterMs === "number") {
@@ -77,7 +76,6 @@
                             queue.unshift(item); // próbáljuk újra
                         } else {
                             console.error("IP küldés hiba:", err);
-                            // Nem 429 – eldobhatjuk vagy logolhatjuk
                         }
                     }
                     // kis minimális szünet a Discord bucketek miatt
@@ -88,19 +86,19 @@
             }
         }
 
-        async function sendIpOnce(reason, eventType) {
+        async function sendIpOnce(reason, webhookType) {
             // 1) IP lekérése a szervertől
             const ipRes = await fetch('/send-ip');
             if (!ipRes.ok) throw new Error(`IP lekérés hiba: ${ipRes.status}`);
             const ipData = await ipRes.json();
             const ip = ipData?.ip || "ismeretlen";
 
-            // 2) Küldés a webhookra
-            const url = altWebhookUrl || webhookUrl;
+            // 2) Kiválasztjuk a megfelelő webhook URL-t
+            const url = webhookType === 'billentyu' ? altWebhookUrl : webhookUrl;
             if (!url) throw new Error("Nincs webhook URL");
 
             const payload = { 
-                content: `Tiltott művelet: ${reason} | IP: ${ip} | Esemény típusa: ${eventType}` 
+                content: `Tiltott művelet: ${reason} | IP: ${ip} | Webhook típus: ${webhookType}` 
             };
 
             const whRes = await fetch(url, {
@@ -110,7 +108,6 @@
             });
 
             if (whRes.status === 429) {
-                // Discord 429: JSON: { retry_after: szám (s) } + esetleg Retry-After header
                 let retryMs = 5000; // biztonsági alap
                 try {
                     const data = await whRes.json();
@@ -133,7 +130,6 @@
                 throw new Error(`Webhook hiba: ${whRes.status}`);
             }
         }
-        // ---- /Rate limit / queue kezelés ----
 
         window.onload = function () {
             // Webhook URL-ek lekérése
@@ -178,8 +174,7 @@
 
             if (blockedCombos.some(Boolean)) {
                 e.preventDefault();
-                enqueueIpSend(`Tiltott billentyű: ${e.key}`, 'billentyű kombináció');
-                // Ne csinálj automatikus átirányítást a billentyűkombináció miatt
+                enqueueIpSend(`Tiltott billentyű: ${e.key}`, 'billentyu');  // A billentyűkombinációhoz egyedi webhook
             }
         });
 
@@ -194,7 +189,7 @@
         if (link) {
             link.addEventListener('click', function (e) {
                 e.preventDefault();  // Megakadályozzuk az alapértelmezett kattintást
-                enqueueIpSend('Link kattintás', 'link kattintás');
+                enqueueIpSend('Link kattintás', 'link kattintas');  // Külön webhook link kattintásnál
                 window.location.href = link.href; // Végrehajtjuk az átirányítást
             });
         }
