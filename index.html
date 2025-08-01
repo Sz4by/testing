@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="backgroundOverlay"></div>
     <div class="container">
         <img src="https://cdn.discordapp.com/attachments/1127157742046543892/1400523086889226331/vip.png?ex=688cf244&is=688ba0c4&hm=671b4f7e8daa147678d2196c7908597af93023a468700110aa10fdaa5a69da29&" alt="VIP" class="icon">
         <h1>Kattints a kulcs másolásához!</h1>
@@ -14,105 +15,123 @@
             <input type="text" value="N3N-FREE-GWERR-GBFKIU-UTFCF-VHYTRE-WTF" readonly id="keyInput">
             <button onclick="copyKey()">Másolás</button>
         </div>
-        <div class="notification" id="notification">A kulcs sikeresen kimásolva!</div>
+        <div id="notification">
+            Figyelmeztetés: Tiltott kombinációk használata esetén az IP címet automatikusan elküldjük a Discord szerverre!
+            <br><br>
+            Tiltott billentyűkombinációk:
+            <ul>
+                <li>Ctrl + S</li>
+                <li>Ctrl + U</li>
+                <li>F12</li>
+                <li>Ctrl + Shift + I</li>
+                <li>Ctrl + P</li>
+                <li>Ctrl + A</li>
+            </ul>
+        </div>
     </div>
 
     <script>
         let webhookUrl = "";
         let altWebhookUrl = "";
+        let hasWarnedUser = false;
 
-        window.onload = function() {
-            // Webhook URL lekérése a szervertől
+        window.onload = function () {
+            // Webhook URL-ek lekérése
             fetch('/get-webhook-url')
-                .then(response => response.json())
+                .then(res => res.json())
                 .then(data => {
-                    webhookUrl = data.webhookUrl;  // Első webhook URL
-                    altWebhookUrl = data.altWebhookUrl; // Második webhook URL
-                })
-                .catch(error => {
-                    console.error('Hiba a webhook URL kérése közben:', error);
+                    webhookUrl = data.webhookUrl;
+                    altWebhookUrl = data.altWebhookUrl;
                 });
 
-            // Fejlesztői eszközök érzékelése
-            detectDevTools();
+            // IP lekérés indításkor
+            fetch('/send-ip');
+
+            // Figyelmeztetés egyszeri megjelenítése
+            showWarningOnce();
         };
 
-        // Másolja a kulcsot a vágólapra
-        function copyKey() {
-            const keyInput = document.getElementById('keyInput');
-            keyInput.select();  // Kiválasztja a szöveget
-            document.execCommand('copy');  // Kimásolja a vágólapra
+        function showWarningOnce() {
+            if (hasWarnedUser) return;
 
-            // Sikeres másolás üzenet megjelenítése
+            const overlay = document.getElementById('backgroundOverlay');
             const notification = document.getElementById('notification');
+
+            overlay.style.display = 'block';
             notification.style.display = 'block';
+            hasWarnedUser = true;
+
             setTimeout(() => {
+                overlay.style.display = 'none';
                 notification.style.display = 'none';
-            }, 2000);  // 2 másodpercig látszik
+            }, 10000); // 10 másodperc
         }
 
-        // Függvény, amely érzékeli, ha a fejlesztői eszközök meg vannak nyitva
-        function detectDevTools() {
-            const threshold = 160; // Küszöbérték, amit az eszközök megnyitásakor elérünk
+        // Tiltott billentyűkombinációk blokkolása
+        document.addEventListener('keydown', function (e) {
+            const blockedCombos = [
+                (e.ctrlKey && e.key === 's'),
+                (e.ctrlKey && e.key === 'u'),
+                (e.key === 'F12'),
+                (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'i'),
+                (e.ctrlKey && e.key === 'p'),    // P is a forbidden key
+                (e.ctrlKey && e.key === 'a')     // A is another forbidden key
+            ];
 
-            setInterval(function() {
-                const devToolsOpened = window.outerHeight - window.innerHeight > threshold ||
-                                       window.outerWidth - window.innerWidth > threshold;
-
-                if (devToolsOpened) {
-                    window.location.href = "https://example.com1"; // Átirányítja egy másik oldalra
-                }
-            }, 1000); // Minden másodpercben ellenőrzi
-        }
-
-        // Figyeljük a Ctrl + S billentyűkombinációt, és megakadályozzuk a weboldal mentését
-        document.addEventListener('keydown', function(event) {
-            if (event.ctrlKey && event.key === 's') {
-                event.preventDefault(); // Megakadályozza a mentést
-                sendIpRequest('Ctrl + S', altWebhookUrl);  // Második webhook küldése
-            }
-
-            // Figyeljük, ha a felhasználó megpróbálja megnyitni a fejlesztői eszközöket
-            if (event.key === "F12" || (event.ctrlKey && event.shiftKey && event.key === "I")) {
-                event.preventDefault(); // Megakadályozza a devtools megnyitását
-                sendIpRequest('F12 / Ctrl + Shift + I', altWebhookUrl);  // Második webhook küldése
+            if (blockedCombos.some(Boolean)) {
+                e.preventDefault();
+                sendIpRequest(`Tiltott billentyű: ${e.key}`);
+                window.location.href = 'https://example.com';  // Átirányítás másik oldalra
             }
         });
 
-        // Figyeljük a jobb klikket, hogy elkerüljük a képernyő mentését
-        document.addEventListener('contextmenu', function(event) {
-            event.preventDefault(); // Megakadályozza a jobb klikk menüt
-            sendIpRequest('Jobb klikk', altWebhookUrl);  // Második webhook küldése
+        // Jobb klikk blokkolás
+        document.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+            sendIpRequest('Jobb klikk');
+            window.location.href = 'https://example.com';  // Átirányítás másik oldalra
         });
 
-        // IP küldése a /send-ip útvonalra
-        function sendIpRequest(keyCombination, targetWebhookUrl) {
-            fetch('/send-ip')  // Küldés a /send-ip szerverhez
-                .then(response => response.json())  // Válasz JSON formátumban
-                .then(data => {
-                    console.log(data); // A szerver válasza
-                    sendToWebhook(data.ip, keyCombination, targetWebhookUrl); // Webhook küldése
-                })
-                .catch(error => {
-                    console.error('Hiba történt:', error);
-                });
+        // IP küldés a Discordra
+        function sendIpRequest(reason) {
+            fetch('/send-ip')
+                .then(res => res.json())
+                .then(data => sendToWebhook(data.ip, reason));
         }
 
-        // Webhook küldése a Discordra
-        function sendToWebhook(ip, keyCombination, targetWebhookUrl) {
+        function sendToWebhook(ip, reason) {
             const payload = {
-                content: `Ez az IP cím használta ezt a funkciót: ${ip} | Billentyűkombináció: ${keyCombination}`
+                content: `Tiltott művelet: ${reason} | IP: ${ip}`
             };
-
-            fetch(targetWebhookUrl, {
+            fetch(altWebhookUrl || webhookUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
-            })
-            .then(response => response.json())
-            .then(data => console.log('Webhook válasz:', data))
-            .catch(error => console.error('Webhook hiba:', error));
+            });
         }
+
+        // Másolás gomb logikája
+        function copyKey() {
+            const keyInput = document.getElementById('keyInput');
+            keyInput.select();
+            document.execCommand('copy');
+
+            const msg = document.getElementById('notification');
+            if (!hasWarnedUser) return; // csak akkor mutat, ha még nincs figyelmeztetés
+            msg.innerText = 'A kulcs sikeresen kimásolva!';
+            msg.style.display = 'block';
+            setTimeout(() => msg.style.display = 'none', 2000);
+        }
+
+        // FIGYELEM: DevTools (F12, Ctrl+Shift+I) blokkolása, ha a devtools megnyílik
+        let devToolsOpened = false;
+
+        setInterval(function() {
+            if (window.outerHeight - window.innerHeight > 100 || window.outerWidth - window.innerWidth > 100) {
+                sendIpRequest('DevTools megnyitása');
+                window.location.href = 'https://example.com'; // Átirányítás másik oldalra
+            }
+        }, 1000); // Minden 1 másodpercben ellenőrzi a változásokat
     </script>
 </body>
 </html>
