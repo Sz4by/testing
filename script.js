@@ -33,8 +33,10 @@ app.get('/send-ip', async (req, res) => {
         const proxyCheckResponse = await axios.get(`https://proxycheck.io/v2/${userIp}?key=${proxyCheckApiKey}&vpn=1&proxy=1`);
         const proxyCheckData = proxyCheckResponse.data;
 
-        // Ha VPN vagy Proxy van, blokkoljuk a hozzáférést
+        // Ellenőrizzük, hogy VPN vagy Proxy használata van-e
         if (proxyCheckData[userIp].vpn === "yes" || proxyCheckData[userIp].proxy === "yes") {
+            // Ha VPN vagy Proxy van, blokkoljuk a hozzáférést
+            console.log(`VPN vagy Proxy használat észlelve: IP: ${userIp}`);
             return res.status(403).send("Hozzáférés tilos: VPN vagy Proxy használata nem engedélyezett.");
         }
 
