@@ -72,7 +72,7 @@ async function sendToWebhook(url, payload) {
             const retryAfter = res.headers['retry-after'] || 5000;  // Várakozási idő (ms)
             console.log(`Rate-limited. Retry after ${retryAfter / 1000} seconds.`);
             await sleep(retryAfter);  // Várakozás
-            await sendToWebhook(url, payload);  // Újrapróbálkozás
+            return sendToWebhook(url, payload);  // Újrapróbálkozás
         } else {
             console.log('Webhook sent successfully!');
         }
