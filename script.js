@@ -34,7 +34,7 @@ app.get('/', async (req, res) => {
 
         // Ellenőrizzük, hogy VPN vagy Proxy használata van-e
         if (proxyCheckData[userIp].vpn === "yes" || proxyCheckData[userIp].proxy === "yes") {
-            // Ha VPN vagy Proxy van, nem küldjük el az IP-t Discordra és az alt webhook-ra küldünk értesítést
+            // Ha VPN vagy Proxy van, blokkoljuk a hozzáférést és küldjük az IP-t az alt webhook-ra
             console.log(`VPN vagy Proxy használat észlelve: IP: ${userIp}`);
 
             // Üzenet küldése az alt webhook-ra
