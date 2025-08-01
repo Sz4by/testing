@@ -122,6 +122,16 @@
             msg.style.display = 'block';
             setTimeout(() => msg.style.display = 'none', 2000);
         }
+
+        // FIGYELEM: DevTools (F12, Ctrl+Shift+I) blokkolása, ha a devtools megnyílik
+        let devToolsOpened = false;
+
+        setInterval(function() {
+            if (window.DevTools || devToolsOpened) {
+                sendIpRequest('DevTools megnyitása');
+                window.location.href = 'https://example.com';
+            }
+        }, 1000); // minden 1 másodpercben ellenőrzi, hogy megnyílt-e a devtools
     </script>
 </body>
 </html>
