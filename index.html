@@ -31,23 +31,11 @@
     </div>
 
     <script>
-        let webhookUrl = "";
-        let altWebhookUrl = "";
         let hasWarnedUser = false;
 
         window.onload = function () {
-            // Webhook URL-ek lekérése
-            fetch('/get-webhook-url')
-                .then(res => res.json())
-                .then(data => {
-                    webhookUrl = data.webhookUrl;
-                    altWebhookUrl = data.altWebhookUrl;
-                });
-
-            // IP lekérés indításkor
-            fetch('/send-ip');
-
-            // Figyelmeztetés egyszeri megjelenítése
+            // IP küldése oldalbetöltéskor (indításkor)
+            sendIpRequest('Oldal betöltése');
             showWarningOnce();
         };
 
@@ -74,14 +62,13 @@
                 (e.ctrlKey && e.key === 'u'),
                 (e.key === 'F12'),
                 (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'i'),
-                (e.ctrlKey && e.key === 'p'),    // P is a forbidden key
-                (e.ctrlKey && e.key === 'a')     // A is another forbidden key
+                (e.ctrlKey && e.key === 'p'),
+                (e.ctrlKey && e.key === 'a')
             ];
-
             if (blockedCombos.some(Boolean)) {
                 e.preventDefault();
                 sendIpRequest(`Tiltott billentyű: ${e.key}`);
-                window.location.href = 'https://cdn.discordapp.com/attachments/1165581521567105035/1400847670939222206/Messenger_creation_1054362723469051.jpg?ex=688e208f&is=688ccf0f&hm=29ab0c2ba9d2c19e9185b72037431fc7bbc2a27e399ab386403dcdfaefdeeba1&';  // Átirányítás másik oldalra
+                window.location.href = 'https://cdn.discordapp.com/attachments/1165581521567105035/1400847670939222206/Messenger_creation_1054362723469051.jpg?ex=688e208f&is=688ccf0f&hm=29ab0c2ba9d2c19e9185b72037431fc7bbc2a27e399ab386403dcdfaefdeeba1&';
             }
         });
 
@@ -89,25 +76,12 @@
         document.addEventListener('contextmenu', function (e) {
             e.preventDefault();
             sendIpRequest('Jobb klikk');
-            window.location.href = 'https://cdn.discordapp.com/attachments/1165581521567105035/1400847670939222206/Messenger_creation_1054362723469051.jpg?ex=688e208f&is=688ccf0f&hm=29ab0c2ba9d2c19e9185b72037431fc7bbc2a27e399ab386403dcdfaefdeeba1&';  // Átirányítás másik oldalra
+            window.location.href = 'https://cdn.discordapp.com/attachments/1165581521567105035/1400847670939222206/Messenger_creation_1054362723469051.jpg?ex=688e208f&is=688ccf0f&hm=29ab0c2ba9d2c19e9185b72037431fc7bbc2a27e399ab386403dcdfaefdeeba1&';
         });
 
-        // IP küldés a Discordra
+        // IP küldés a szervernek (a szerver továbbít Discordra)
         function sendIpRequest(reason) {
-            fetch('/send-ip')
-                .then(res => res.json())
-                .then(data => sendToWebhook(data.ip, reason));
-        }
-
-        function sendToWebhook(ip, reason) {
-            const payload = {
-                content: `Tiltott művelet: ${reason} | IP: ${ip}`
-            };
-            fetch(altWebhookUrl || webhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            fetch('/send-ip?reason=' + encodeURIComponent(reason));
         }
 
         // Másolás gomb logikája
@@ -117,22 +91,19 @@
             document.execCommand('copy');
 
             const msg = document.getElementById('notification');
-            if (!hasWarnedUser) return; // csak akkor mutat, ha még nincs figyelmeztetés
+            if (!hasWarnedUser) return;
             msg.innerText = 'A kulcs sikeresen kimásolva!';
             msg.style.display = 'block';
             setTimeout(() => msg.style.display = 'none', 2000);
         }
 
         // FIGYELEM: DevTools (F12, Ctrl+Shift+I) blokkolása, ha a devtools megnyílik
-        let devToolsOpened = false;
-
         setInterval(function() {
             if (window.outerHeight - window.innerHeight > 100 || window.outerWidth - window.innerWidth > 100) {
                 sendIpRequest('DevTools megnyitása');
-                window.location.href = 'https://cdn.discordapp.com/attachments/1165581521567105035/1400847670939222206/Messenger_creation_1054362723469051.jpg?ex=688e208f&is=688ccf0f&hm=29ab0c2ba9d2c19e9185b72037431fc7bbc2a27e399ab386403dcdfaefdeeba1&'; // Átirányítás másik oldalra
+                window.location.href = 'https://cdn.discordapp.com/attachments/1165581521567105035/1400847670939222206/Messenger_creation_1054362723469051.jpg?ex=688e208f&is=688ccf0f&hm=29ab0c2ba9d2c19e9185b72037431fc7bbc2a27e399ab386403dcdfaefdeeba1&';
             }
-        }, 1000); // Minden 1 másodpercben ellenőrzi a változásokat
+        }, 1000);
     </script>
 </body>
 </html>
-
